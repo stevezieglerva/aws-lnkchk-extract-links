@@ -1,8 +1,11 @@
 import boto3
+import requests
+from bs4 import BeautifulSoup
 
 
 def lambda_handler(event, context):
-    # Get the service resource
+    print("In lambda_handler ...")
+
     sqs = boto3.resource('sqs')
 
     # Get the queue
@@ -17,12 +20,32 @@ def lambda_handler(event, context):
             if file_name:
                 file_attribute = ' ({0})'.format(file_name)
 
-        # Print out the body and author (if set)
-        print('Hello, {0}!{1}'.format(message.body, file_attribute))
+        url_to_process = message.body
+        print("\tFound queue message:, {0}!{1}".format(url_to_process, file_attribute))
+
+        html = download_page(url_to_process)
+        links = {}
+        links = extract_links(html, url_to_process)
 
         # Let the queue know that the message is processed
         message.delete()
 
 
+def download_page(url):
+    html = ""
+    response = requests.get(url)
+    html = response.text
+    return html
 
-    
+def extract_links(html, base_url):
+    links = {}
+    soup = BeautifulSoup(html, "html.parser")
+    anchors = soup.find_all('a')
+    for link in anchors:
+        print(link.get('href'))
+        links[link.get('href')] = link.text 
+    return links
+
+def format_url(url, base_url):
+    return url
+

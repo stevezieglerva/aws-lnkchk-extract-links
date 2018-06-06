@@ -1,0 +1,30 @@
+
+C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>cls
+
+C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>call ..\Scripts\activate 
+http://www.cnn.com
+https://www.cnn.com
+http://www.cnn.com
+http://www.cnn.com
+http://www.google.com
+Calling lambda_handler ...
+In lambda_handler ...
+	Found queue message:, http://nerdthoughts.net! (integration_test.txt)
+/
+/about/
+/work/
+/2018/03/26/under-construction.html
+/2018/03/finally-posted-on-devto.html
+/2017/09/losing-confidence-cleaning-up-after.html
+/2017/01/05/from-pic-of-sweden-to-my-toughest.html
+/2016/11/dadsplaining-at-work.html
+/2016/04/creative-geoparser-tool-for-natural.html
+/2015/10/09/how-to-easily-log-your-twitter-data.html
+/2015/08/give-credit-like-quarterback.html
+/2015/04/temperature-chart-to-help-kids-pick.html
+/2015/03/beauty-of-elasticsearch-bool-query.html
+/2015/02/yeah-we-agile.html
+/2013/01/hello-world.html
+/feed.xml
+https://github.com/stevezieglerva
+https://twitter.com/stevezieglerva

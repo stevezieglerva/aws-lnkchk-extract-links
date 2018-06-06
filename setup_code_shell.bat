@@ -1,0 +1,1 @@
+cmd /k setup_code_shell_sub.bat
