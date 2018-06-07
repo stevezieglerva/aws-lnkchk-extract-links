@@ -2,29 +2,90 @@
 C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>cls
 
 C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>call ..\Scripts\activate 
-http://www.cnn.com
-https://www.cnn.com
-http://www.cnn.com
-http://www.cnn.com
-http://www.google.com
+SplitResult(scheme='', netloc='', path='', query='', fragment='top')
 Calling lambda_handler ...
 In lambda_handler ...
 	Found queue message:, http://nerdthoughts.net! (integration_test.txt)
-/
-/about/
-/work/
-/2018/03/26/under-construction.html
-/2018/03/finally-posted-on-devto.html
-/2017/09/losing-confidence-cleaning-up-after.html
-/2017/01/05/from-pic-of-sweden-to-my-toughest.html
-/2016/11/dadsplaining-at-work.html
-/2016/04/creative-geoparser-tool-for-natural.html
-/2015/10/09/how-to-easily-log-your-twitter-data.html
-/2015/08/give-credit-like-quarterback.html
-/2015/04/temperature-chart-to-help-kids-pick.html
-/2015/03/beauty-of-elasticsearch-bool-query.html
-/2015/02/yeah-we-agile.html
-/2013/01/hello-world.html
-/feed.xml
-https://github.com/stevezieglerva
-https://twitter.com/stevezieglerva
+SplitResult(scheme='', netloc='', path='/', query='', fragment='')
+*** First char: / /
+	/ -> http://nerdthoughts.net/
+SplitResult(scheme='', netloc='', path='/about/', query='', fragment='')
+*** First char: /about/ /
+	/about/ -> http://nerdthoughts.net/about/
+SplitResult(scheme='', netloc='', path='/work/', query='', fragment='')
+*** First char: /work/ /
+	/work/ -> http://nerdthoughts.net/work/
+SplitResult(scheme='', netloc='', path='/2018/03/26/under-construction.html', query='', fragment='')
+*** First char: /2018/03/26/under-construction.html /
+	/2018/03/26/under-construction.html -> http://nerdthoughts.net/2018/03/26/under-construction.html
+SplitResult(scheme='', netloc='', path='/2018/03/finally-posted-on-devto.html', query='', fragment='')
+*** First char: /2018/03/finally-posted-on-devto.html /
+	/2018/03/finally-posted-on-devto.html -> http://nerdthoughts.net/2018/03/finally-posted-on-devto.html
+SplitResult(scheme='', netloc='', path='/2017/09/losing-confidence-cleaning-up-after.html', query='', fragment='')
+*** First char: /2017/09/losing-confidence-cleaning-up-after.html /
+	/2017/09/losing-confidence-cleaning-up-after.html -> http://nerdthoughts.net/2017/09/losing-confidence-cleaning-up-after.html
+SplitResult(scheme='', netloc='', path='/2017/01/05/from-pic-of-sweden-to-my-toughest.html', query='', fragment='')
+*** First char: /2017/01/05/from-pic-of-sweden-to-my-toughest.html /
+	/2017/01/05/from-pic-of-sweden-to-my-toughest.html -> http://nerdthoughts.net/2017/01/05/from-pic-of-sweden-to-my-toughest.html
+SplitResult(scheme='', netloc='', path='/2016/11/dadsplaining-at-work.html', query='', fragment='')
+*** First char: /2016/11/dadsplaining-at-work.html /
+	/2016/11/dadsplaining-at-work.html -> http://nerdthoughts.net/2016/11/dadsplaining-at-work.html
+SplitResult(scheme='', netloc='', path='/2016/04/creative-geoparser-tool-for-natural.html', query='', fragment='')
+*** First char: /2016/04/creative-geoparser-tool-for-natural.html /
+	/2016/04/creative-geoparser-tool-for-natural.html -> http://nerdthoughts.net/2016/04/creative-geoparser-tool-for-natural.html
+SplitResult(scheme='', netloc='', path='/2015/10/09/how-to-easily-log-your-twitter-data.html', query='', fragment='')
+*** First char: /2015/10/09/how-to-easily-log-your-twitter-data.html /
+	/2015/10/09/how-to-easily-log-your-twitter-data.html -> http://nerdthoughts.net/2015/10/09/how-to-easily-log-your-twitter-data.html
+SplitResult(scheme='', netloc='', path='/2015/08/give-credit-like-quarterback.html', query='', fragment='')
+*** First char: /2015/08/give-credit-like-quarterback.html /
+	/2015/08/give-credit-like-quarterback.html -> http://nerdthoughts.net/2015/08/give-credit-like-quarterback.html
+SplitResult(scheme='', netloc='', path='/2015/04/temperature-chart-to-help-kids-pick.html', query='', fragment='')
+*** First char: /2015/04/temperature-chart-to-help-kids-pick.html /
+	/2015/04/temperature-chart-to-help-kids-pick.html -> http://nerdthoughts.net/2015/04/temperature-chart-to-help-kids-pick.html
+SplitResult(scheme='', netloc='', path='/2015/03/beauty-of-elasticsearch-bool-query.html', query='', fragment='')
+*** First char: /2015/03/beauty-of-elasticsearch-bool-query.html /
+	/2015/03/beauty-of-elasticsearch-bool-query.html -> http://nerdthoughts.net/2015/03/beauty-of-elasticsearch-bool-query.html
+SplitResult(scheme='', netloc='', path='/2015/02/yeah-we-agile.html', query='', fragment='')
+*** First char: /2015/02/yeah-we-agile.html /
+	/2015/02/yeah-we-agile.html -> http://nerdthoughts.net/2015/02/yeah-we-agile.html
+SplitResult(scheme='', netloc='', path='/2013/01/hello-world.html', query='', fragment='')
+*** First char: /2013/01/hello-world.html /
+	/2013/01/hello-world.html -> http://nerdthoughts.net/2013/01/hello-world.html
+SplitResult(scheme='', netloc='', path='/feed.xml', query='', fragment='')
+*** First char: /feed.xml /
+	/feed.xml -> http://nerdthoughts.net/feed.xml
+SplitResult(scheme='https', netloc='github.com', path='/stevezieglerva', query='', fragment='')
+	https://github.com/stevezieglerva -> https://github.com/stevezieglerva
+SplitResult(scheme='https', netloc='twitter.com', path='/stevezieglerva', query='', fragment='')
+	https://twitter.com/stevezieglerva -> https://twitter.com/stevezieglerva
+{
+    "Messages": [
+        {
+            "MD5OfMessageAttributes": "620ba4b7fbe68db7ef7f31d4c1487a66",
+            "Attributes": {
+                "ApproximateReceiveCount": "2",
+                "SentTimestamp": "1528341042106",
+                "SenderId": "AIDAJ6J45YO4ULNBAXD3C",
+                "ApproximateFirstReceiveTimestamp": "1528369758088"
+            },
+            "MD5OfBody": "eff2a20afadc5a9ecfefb4fc1663f8b1",
+            "ReceiptHandle": "AQEB4qEmM/nTeA5EVW+08vOY0UKVBRkK5mslnzOm0EqlBpPBmTHzkpG52/uvOWjUYaxU1QdO8M4Kra6yqpoBkw+xpjKbFi2y3zckGWMdWCpv58D4NFE5peJx8u37Ykhndx5Xs9yDjEiwg2CCPL4RyaW0D5XTdv34scTG//nFWhqK9aLYA4TPTlLIYiR5e512brpwdBkPWItydBQzmcy+HGydd6Vt2Ed/DKHRMDCzSxPKAkX0dBqgjzHPOwrkYymHndH39HGHUF/c1ANSnBYaMgeiTzYYe0hQOk7Qf1GF5+CoB+E3y1P/+BuBGIoXy+ITaFhesLv5HJvMkTDzTkFu5Godr8N3lVtinoj29cPgMUWx3yPxDywsyr2o4vIkLVCgAgGRwFtHOEqEhm/CCtnpHZgCcA==",
+            "MessageId": "9ec4bd28-8e42-4e9f-a554-38b48240ca8d",
+            "MessageAttributes": {
+                "source": {
+                    "StringValue": "integration test",
+                    "DataType": "String"
+                },
+                "file": {
+                    "StringValue": "integration_test.txt",
+                    "DataType": "String"
+                },
+                "line": {
+                    "StringValue": "1",
+                    "DataType": "String"
+                }
+            },
+            "Body": "http://nerdthoughts.net"
+        }
+    ]
+}

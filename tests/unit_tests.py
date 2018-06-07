@@ -97,6 +97,64 @@ class TestMethods(unittest.TestCase):
 		expected = "http://www.example.com/relative/page.html"
 		self.assertEqual(result, expected)
 
+	def test_format_url__relative_link_no_slash__base_added(self):
+		# Arrange
+
+		# Act
+		test_url = "relative/page.html"
+		result = format_url(test_url, "http://www.example.com")
+
+		# Assert
+		expected = "http://www.example.com/relative/page.html"
+		self.assertEqual(result, expected)
+
+	def test_format_url__link_with_query_strings__base_added(self):
+		# Arrange
+
+		# Act
+		test_url = "/test.html?hello=world"
+		result = format_url(test_url, "http://www.example.com")
+
+		# Assert
+		expected = "http://www.example.com/test.html?hello=world"
+		self.assertEqual(result, expected)
+
+	def test_format_url__pure_anchor_link__base_added(self):
+		# Arrange
+
+		# Act
+		test_url = "#top"
+		result = format_url(test_url, "http://www.example.com")
+
+		# Assert
+		expected = ""
+		self.assertEqual(result, expected)
+
+	def test_format_url__link_with_anchor__base_added(self):
+		# Arrange
+
+		# Act
+		test_url = "http://example.com/page.html#top"
+		result = format_url(test_url, "http://www.example.com")
+
+		# Assert
+		expected = "http://example.com/page.html#top"
+		self.assertEqual(result, expected)
+
+	def test_format_url__double_slash__base_added(self):
+		# Arrange
+
+		# Act
+		test_url = "//store.cnn"
+		result = format_url(test_url, "http://www.example.com")
+
+		# Assert
+		expected = "http://store.cnn"
+		self.assertEqual(result, expected)
+
+
+
+
 if __name__ == '__main__':
 	unittest.main()		
 
