@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 def lambda_handler(event, context):
     print("In lambda_handler ...")
 
-    sqs = boto3.resource('sqs')
+    sqs = boto3.client('sqs')
 
     queue = sqs.get_queue_by_name(QueueName="lnkchk-pages")
-
+    # Get messages from the queue
     for message in queue.receive_messages(MessageAttributeNames=["file", "line"]):
         file_attribute = ""
         if message.message_attributes is not None:
@@ -21,9 +21,14 @@ def lambda_handler(event, context):
         url_to_process = message.body
         print("\tFound queue message:, {0}!{1}".format(url_to_process, file_attribute))
 
+        # Read the page
         html = download_page(url_to_process)
         links = {}
         links = extract_links(html, url_to_process)
+
+        # Add relative links to the queue
+
+        # Check the links
         for key, value in links.items(): 
             url = key
             link_text = value
@@ -50,7 +55,8 @@ def extract_links(html, base_url):
         formated_url = format_url(url, base_url)
         print("\t" + str(count) + ". " + url + " -> " + formated_url)
         if formated_url != "":
-            links[formated_url] = link.text 
+            link_location = get_link_location(url, base_url)
+            links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
     return links
 
 def format_url(url, base_url):
@@ -103,3 +109,14 @@ def is_link_valid(url):
     else:
         return False
 
+def get_link_location(url, base_url):
+    link_location = "external"
+    if is_relative_path(url):
+        link_location = "relative"
+
+    url_parts = urlsplit(url)
+    base_url_parts = urlsplit(base_url)
+    if url_parts.netloc == base_url_parts.netloc:
+        link_location = "relative"    
+
+    return link_location

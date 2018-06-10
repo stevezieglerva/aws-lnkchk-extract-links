@@ -2,90 +2,117 @@
 C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>cls
 
 C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>call ..\Scripts\activate 
-SplitResult(scheme='', netloc='', path='', query='', fragment='top')
+	1. http://www.cnn.com -> http://www.cnn.com
+	1. https://www.cnn.com -> https://www.cnn.com
+	1. http://www.cnn.com -> http://www.cnn.com
+	1. http://www.cnn.com -> http://www.cnn.com
+	2. http://www.google.com -> http://www.google.com
 Calling lambda_handler ...
 In lambda_handler ...
 	Found queue message:, http://nerdthoughts.net! (integration_test.txt)
-SplitResult(scheme='', netloc='', path='/', query='', fragment='')
-*** First char: / /
-	/ -> http://nerdthoughts.net/
-SplitResult(scheme='', netloc='', path='/about/', query='', fragment='')
-*** First char: /about/ /
-	/about/ -> http://nerdthoughts.net/about/
-SplitResult(scheme='', netloc='', path='/work/', query='', fragment='')
-*** First char: /work/ /
-	/work/ -> http://nerdthoughts.net/work/
-SplitResult(scheme='', netloc='', path='/2018/03/26/under-construction.html', query='', fragment='')
-*** First char: /2018/03/26/under-construction.html /
-	/2018/03/26/under-construction.html -> http://nerdthoughts.net/2018/03/26/under-construction.html
-SplitResult(scheme='', netloc='', path='/2018/03/finally-posted-on-devto.html', query='', fragment='')
-*** First char: /2018/03/finally-posted-on-devto.html /
-	/2018/03/finally-posted-on-devto.html -> http://nerdthoughts.net/2018/03/finally-posted-on-devto.html
-SplitResult(scheme='', netloc='', path='/2017/09/losing-confidence-cleaning-up-after.html', query='', fragment='')
-*** First char: /2017/09/losing-confidence-cleaning-up-after.html /
-	/2017/09/losing-confidence-cleaning-up-after.html -> http://nerdthoughts.net/2017/09/losing-confidence-cleaning-up-after.html
-SplitResult(scheme='', netloc='', path='/2017/01/05/from-pic-of-sweden-to-my-toughest.html', query='', fragment='')
-*** First char: /2017/01/05/from-pic-of-sweden-to-my-toughest.html /
-	/2017/01/05/from-pic-of-sweden-to-my-toughest.html -> http://nerdthoughts.net/2017/01/05/from-pic-of-sweden-to-my-toughest.html
-SplitResult(scheme='', netloc='', path='/2016/11/dadsplaining-at-work.html', query='', fragment='')
-*** First char: /2016/11/dadsplaining-at-work.html /
-	/2016/11/dadsplaining-at-work.html -> http://nerdthoughts.net/2016/11/dadsplaining-at-work.html
-SplitResult(scheme='', netloc='', path='/2016/04/creative-geoparser-tool-for-natural.html', query='', fragment='')
-*** First char: /2016/04/creative-geoparser-tool-for-natural.html /
-	/2016/04/creative-geoparser-tool-for-natural.html -> http://nerdthoughts.net/2016/04/creative-geoparser-tool-for-natural.html
-SplitResult(scheme='', netloc='', path='/2015/10/09/how-to-easily-log-your-twitter-data.html', query='', fragment='')
-*** First char: /2015/10/09/how-to-easily-log-your-twitter-data.html /
-	/2015/10/09/how-to-easily-log-your-twitter-data.html -> http://nerdthoughts.net/2015/10/09/how-to-easily-log-your-twitter-data.html
-SplitResult(scheme='', netloc='', path='/2015/08/give-credit-like-quarterback.html', query='', fragment='')
-*** First char: /2015/08/give-credit-like-quarterback.html /
-	/2015/08/give-credit-like-quarterback.html -> http://nerdthoughts.net/2015/08/give-credit-like-quarterback.html
-SplitResult(scheme='', netloc='', path='/2015/04/temperature-chart-to-help-kids-pick.html', query='', fragment='')
-*** First char: /2015/04/temperature-chart-to-help-kids-pick.html /
-	/2015/04/temperature-chart-to-help-kids-pick.html -> http://nerdthoughts.net/2015/04/temperature-chart-to-help-kids-pick.html
-SplitResult(scheme='', netloc='', path='/2015/03/beauty-of-elasticsearch-bool-query.html', query='', fragment='')
-*** First char: /2015/03/beauty-of-elasticsearch-bool-query.html /
-	/2015/03/beauty-of-elasticsearch-bool-query.html -> http://nerdthoughts.net/2015/03/beauty-of-elasticsearch-bool-query.html
-SplitResult(scheme='', netloc='', path='/2015/02/yeah-we-agile.html', query='', fragment='')
-*** First char: /2015/02/yeah-we-agile.html /
-	/2015/02/yeah-we-agile.html -> http://nerdthoughts.net/2015/02/yeah-we-agile.html
-SplitResult(scheme='', netloc='', path='/2013/01/hello-world.html', query='', fragment='')
-*** First char: /2013/01/hello-world.html /
-	/2013/01/hello-world.html -> http://nerdthoughts.net/2013/01/hello-world.html
-SplitResult(scheme='', netloc='', path='/feed.xml', query='', fragment='')
-*** First char: /feed.xml /
-	/feed.xml -> http://nerdthoughts.net/feed.xml
-SplitResult(scheme='https', netloc='github.com', path='/stevezieglerva', query='', fragment='')
-	https://github.com/stevezieglerva -> https://github.com/stevezieglerva
-SplitResult(scheme='https', netloc='twitter.com', path='/stevezieglerva', query='', fragment='')
-	https://twitter.com/stevezieglerva -> https://twitter.com/stevezieglerva
+	1. / -> http://nerdthoughts.net/
+	2. /about/ -> http://nerdthoughts.net/about/
+	3. /work/ -> http://nerdthoughts.net/work/
+	4. /2018/03/26/under-construction.html -> http://nerdthoughts.net/2018/03/26/under-construction.html
+	5. /2018/03/finally-posted-on-devto.html -> http://nerdthoughts.net/2018/03/finally-posted-on-devto.html
+	6. /2017/09/losing-confidence-cleaning-up-after.html -> http://nerdthoughts.net/2017/09/losing-confidence-cleaning-up-after.html
+	7. /2017/01/05/from-pic-of-sweden-to-my-toughest.html -> http://nerdthoughts.net/2017/01/05/from-pic-of-sweden-to-my-toughest.html
+	8. /2016/11/dadsplaining-at-work.html -> http://nerdthoughts.net/2016/11/dadsplaining-at-work.html
+	9. /2016/04/creative-geoparser-tool-for-natural.html -> http://nerdthoughts.net/2016/04/creative-geoparser-tool-for-natural.html
+	10. /2015/10/09/how-to-easily-log-your-twitter-data.html -> http://nerdthoughts.net/2015/10/09/how-to-easily-log-your-twitter-data.html
+	11. /2015/08/give-credit-like-quarterback.html -> http://nerdthoughts.net/2015/08/give-credit-like-quarterback.html
+	12. /2015/04/temperature-chart-to-help-kids-pick.html -> http://nerdthoughts.net/2015/04/temperature-chart-to-help-kids-pick.html
+	13. /2015/03/beauty-of-elasticsearch-bool-query.html -> http://nerdthoughts.net/2015/03/beauty-of-elasticsearch-bool-query.html
+	14. /2015/02/yeah-we-agile.html -> http://nerdthoughts.net/2015/02/yeah-we-agile.html
+	15. /2013/01/hello-world.html -> http://nerdthoughts.net/2013/01/hello-world.html
+	16. /feed.xml -> http://nerdthoughts.net/feed.xml
+	17. https://github.com/stevezieglerva -> https://github.com/stevezieglerva
+	18. https://twitter.com/stevezieglerva -> https://twitter.com/stevezieglerva
+		Checked: http://nerdthoughts.net/2015/04/temperature-chart-to-help-kids-pick.html - Status: 200
+		Checked: http://nerdthoughts.net/2018/03/26/under-construction.html - Status: 200
+		Checked: http://nerdthoughts.net/2015/08/give-credit-like-quarterback.html - Status: 200
+		Checked: http://nerdthoughts.net/work/ - Status: 200
+		Checked: http://nerdthoughts.net/ - Status: 200
+		Checked: https://twitter.com/stevezieglerva - Status: 200
+		Checked: http://nerdthoughts.net/2015/10/09/how-to-easily-log-your-twitter-data.html - Status: 200
+		Checked: http://nerdthoughts.net/2016/11/dadsplaining-at-work.html - Status: 200
+		Checked: http://nerdthoughts.net/2017/09/losing-confidence-cleaning-up-after.html - Status: 200
+		Checked: http://nerdthoughts.net/about/ - Status: 200
+		Checked: http://nerdthoughts.net/feed.xml - Status: 200
+		Checked: https://github.com/stevezieglerva - Status: 200
+		Checked: http://nerdthoughts.net/2018/03/finally-posted-on-devto.html - Status: 200
+		Checked: http://nerdthoughts.net/2016/04/creative-geoparser-tool-for-natural.html - Status: 200
+		Checked: http://nerdthoughts.net/2015/03/beauty-of-elasticsearch-bool-query.html - Status: 200
+		Checked: http://nerdthoughts.net/2015/02/yeah-we-agile.html - Status: 200
+		Checked: http://nerdthoughts.net/2013/01/hello-world.html - Status: 200
+		Checked: http://nerdthoughts.net/2017/01/05/from-pic-of-sweden-to-my-toughest.html - Status: 200
+Calling lambda_handler ...
+In lambda_handler ...
+	Found queue message:, http://nerdthoughts.net! (integration_test.txt)
+	1. / -> http://nerdthoughts.net/
+	2. /about/ -> http://nerdthoughts.net/about/
+	3. /work/ -> http://nerdthoughts.net/work/
+	4. /2018/03/26/under-construction.html -> http://nerdthoughts.net/2018/03/26/under-construction.html
+	5. /2018/03/finally-posted-on-devto.html -> http://nerdthoughts.net/2018/03/finally-posted-on-devto.html
+	6. /2017/09/losing-confidence-cleaning-up-after.html -> http://nerdthoughts.net/2017/09/losing-confidence-cleaning-up-after.html
+	7. /2017/01/05/from-pic-of-sweden-to-my-toughest.html -> http://nerdthoughts.net/2017/01/05/from-pic-of-sweden-to-my-toughest.html
+	8. /2016/11/dadsplaining-at-work.html -> http://nerdthoughts.net/2016/11/dadsplaining-at-work.html
+	9. /2016/04/creative-geoparser-tool-for-natural.html -> http://nerdthoughts.net/2016/04/creative-geoparser-tool-for-natural.html
+	10. /2015/10/09/how-to-easily-log-your-twitter-data.html -> http://nerdthoughts.net/2015/10/09/how-to-easily-log-your-twitter-data.html
+	11. /2015/08/give-credit-like-quarterback.html -> http://nerdthoughts.net/2015/08/give-credit-like-quarterback.html
+	12. /2015/04/temperature-chart-to-help-kids-pick.html -> http://nerdthoughts.net/2015/04/temperature-chart-to-help-kids-pick.html
+	13. /2015/03/beauty-of-elasticsearch-bool-query.html -> http://nerdthoughts.net/2015/03/beauty-of-elasticsearch-bool-query.html
+	14. /2015/02/yeah-we-agile.html -> http://nerdthoughts.net/2015/02/yeah-we-agile.html
+	15. /2013/01/hello-world.html -> http://nerdthoughts.net/2013/01/hello-world.html
+	16. /feed.xml -> http://nerdthoughts.net/feed.xml
+	17. https://github.com/stevezieglerva -> https://github.com/stevezieglerva
+	18. https://twitter.com/stevezieglerva -> https://twitter.com/stevezieglerva
+		Checked: http://nerdthoughts.net/2015/04/temperature-chart-to-help-kids-pick.html - Status: 200
+		Checked: http://nerdthoughts.net/2018/03/26/under-construction.html - Status: 200
+		Checked: http://nerdthoughts.net/2015/08/give-credit-like-quarterback.html - Status: 200
+		Checked: http://nerdthoughts.net/work/ - Status: 200
+		Checked: http://nerdthoughts.net/ - Status: 200
+		Checked: https://twitter.com/stevezieglerva - Status: 200
+		Checked: http://nerdthoughts.net/2015/10/09/how-to-easily-log-your-twitter-data.html - Status: 200
+		Checked: http://nerdthoughts.net/2016/11/dadsplaining-at-work.html - Status: 200
+		Checked: http://nerdthoughts.net/2017/09/losing-confidence-cleaning-up-after.html - Status: 200
+		Checked: http://nerdthoughts.net/about/ - Status: 200
+		Checked: http://nerdthoughts.net/feed.xml - Status: 200
+		Checked: https://github.com/stevezieglerva - Status: 200
+		Checked: http://nerdthoughts.net/2018/03/finally-posted-on-devto.html - Status: 200
+		Checked: http://nerdthoughts.net/2016/04/creative-geoparser-tool-for-natural.html - Status: 200
+		Checked: http://nerdthoughts.net/2015/03/beauty-of-elasticsearch-bool-query.html - Status: 200
+		Checked: http://nerdthoughts.net/2015/02/yeah-we-agile.html - Status: 200
+		Checked: http://nerdthoughts.net/2013/01/hello-world.html - Status: 200
+		Checked: http://nerdthoughts.net/2017/01/05/from-pic-of-sweden-to-my-toughest.html - Status: 200
 {
     "Messages": [
         {
-            "MD5OfMessageAttributes": "620ba4b7fbe68db7ef7f31d4c1487a66",
+            "Body": "http://cnn.com",
+            "ReceiptHandle": "AQEBk8/rq6aAEniW28YUDBKF4XXyzNr4l0oYGVfKkxUqcR0A6QvWQNFyeyuOvU8S3AW6eEhm48gIf816LK4gtOD6owwZE6i6ROhnRHPfjWzSnJltwyVMFmQyH6D0YVKnip3uRVcelFfEuyQQTR64H9IPK3Sz5d6DQVaoPRmNJp4euBfOhqbiIELZ+S4Pc40twZEpPhAa9sDobgwT3n3uggX6w0zbt23O/ZEBEbLO0zce/wdrAAch/lHxfbf7d5ZGzIQUAXhoI9bVqD2Tm9XffOjeJsaqRyA2uD2oLp4qG0WFqRZAvGnPpSjtASe0OHxsY9e6gwSaGJkAuXMju4OZj2bUEn0+RJsYnZaYfCCCRWDaebvJ83TYlK0FHK/D1B0bWsus8ugrYg9nnCtojPpZPNjBgA==",
             "Attributes": {
-                "ApproximateReceiveCount": "2",
-                "SentTimestamp": "1528341042106",
-                "SenderId": "AIDAJ6J45YO4ULNBAXD3C",
-                "ApproximateFirstReceiveTimestamp": "1528369758088"
+                "SentTimestamp": "1528371852908",
+                "ApproximateFirstReceiveTimestamp": "1528371852908",
+                "ApproximateReceiveCount": "5",
+                "SenderId": "AIDAJ6J45YO4ULNBAXD3C"
             },
-            "MD5OfBody": "eff2a20afadc5a9ecfefb4fc1663f8b1",
-            "ReceiptHandle": "AQEB4qEmM/nTeA5EVW+08vOY0UKVBRkK5mslnzOm0EqlBpPBmTHzkpG52/uvOWjUYaxU1QdO8M4Kra6yqpoBkw+xpjKbFi2y3zckGWMdWCpv58D4NFE5peJx8u37Ykhndx5Xs9yDjEiwg2CCPL4RyaW0D5XTdv34scTG//nFWhqK9aLYA4TPTlLIYiR5e512brpwdBkPWItydBQzmcy+HGydd6Vt2Ed/DKHRMDCzSxPKAkX0dBqgjzHPOwrkYymHndH39HGHUF/c1ANSnBYaMgeiTzYYe0hQOk7Qf1GF5+CoB+E3y1P/+BuBGIoXy+ITaFhesLv5HJvMkTDzTkFu5Godr8N3lVtinoj29cPgMUWx3yPxDywsyr2o4vIkLVCgAgGRwFtHOEqEhm/CCtnpHZgCcA==",
-            "MessageId": "9ec4bd28-8e42-4e9f-a554-38b48240ca8d",
+            "MessageId": "57906b01-8e59-48c2-b78a-33c58061bc47",
             "MessageAttributes": {
-                "source": {
-                    "StringValue": "integration test",
+                "line": {
+                    "StringValue": "1",
                     "DataType": "String"
                 },
                 "file": {
                     "StringValue": "integration_test.txt",
                     "DataType": "String"
                 },
-                "line": {
-                    "StringValue": "1",
+                "source": {
+                    "StringValue": "integration test",
                     "DataType": "String"
                 }
             },
-            "Body": "http://nerdthoughts.net"
+            "MD5OfBody": "64f8a6defe298c20bd2bf8491b263223",
+            "MD5OfMessageAttributes": "620ba4b7fbe68db7ef7f31d4c1487a66"
         }
     ]
 }

@@ -33,45 +33,103 @@ class TestMethods(unittest.TestCase):
 		html = "<html><a href='http://www.cnn.com'>Click here</a></html>"
 
 		# Act
-		links = extract_links(html, "http://www.example.com")
+		result = extract_links(html, "http://www.example.com")
 
 		# Assert
-		assert len(links) ==  1, "Expected to find links"
-		assert links["http://www.cnn.com"] == "Click here", "Expected to find links"
+		self.assertEqual(len(result), 1)
+		self.assertEqual(result["http://www.cnn.com"]["link_text"], "Click here")
+		self.assertEqual(result["http://www.cnn.com"]["link_location"], "external")
+
+
+	def test_extract_links__relative_links__returns_links(self):
+		# Arrange
+		html = "<html><a href='http://www.cnn.com'>Click here</a>   <a href='/'>Return to home page</a>  <a href='/subpage/test.html'>Test</a>  </html>"
+
+		# Act
+		result = extract_links(html, "http://www.example.com")
+
+		# Assert
+		self.assertEqual(len(result), 3)
+		self.assertEqual(result["http://www.cnn.com"]["link_text"], "Click here")
+		self.assertEqual(result["http://www.cnn.com"]["link_location"], "external")
+		self.assertEqual(result["http://www.example.com/"]["link_text"], "Return to home page")
+		self.assertEqual(result["http://www.example.com/"]["link_location"], "relative")
+		self.assertEqual(result["http://www.example.com/subpage/test.html"]["link_text"], "Test")
+		self.assertEqual(result["http://www.example.com/subpage/test.html"]["link_location"], "relative")
+
+
+
+	def test_check_link_location__relative_link__relative_link_found(self):
+		# Arrange
+
+		# Act
+		result = get_link_location("/subpage/test.html", "http://www.example.com") 
+
+		# Assert
+		self.assertEqual(result, "relative")
+
+	def test_check_link_location__same_site_link__relative_link_found(self):
+		# Arrange
+
+		# Act
+		result = get_link_location("http://www.example.com/subpage/test.html", "http://www.example.com") 
+
+		# Assert
+		self.assertEqual(result, "relative")
+
+	def test_check_link_location__external_link__external_link_found(self):
+		# Arrange
+
+		# Act
+		result = get_link_location("https://www.cnn.com", "http://www.example.com") 
+
+		# Assert
+		self.assertEqual(result, "external")
+
+	def test_check_link_location__same_site_with_https__relative_link_found(self):
+		# Arrange
+
+		# Act
+		result = get_link_location("http://www.example.com/subpage/test.html", "https://www.example.com") 
+
+		# Assert
+		self.assertEqual(result, "relative")
 
 	def test_extract_links__several_links__returns_links(self):
 		# Arrange
-		html = "<html><a href='http://www.cnn.com'>Click here</a><a href='http://www.google.com'>Click here for Google</a></html>"
+		html = "<html><a href='http://www.cnn.com'>Click here for CNN</a><a href='http://www.google.com'>Click here for Google</a></html>"
 
 		# Act
-		links = extract_links(html, "http://www.example.com")
+		result = extract_links(html, "http://www.example.com")
 
 		# Assert
-		assert len(links) == 2, "Expected to find links"
-		assert links["http://www.cnn.com"] == "Click here"
-		assert links["http://www.google.com"] == "Click here for Google"
+		self.assertEqual(len(result), 2)
+		self.assertEqual(result["http://www.cnn.com"]["link_text"], "Click here for CNN")
+		self.assertEqual(result["http://www.google.com"]["link_text"], "Click here for Google")
+		
 
 	def test_extract_links__no_link_text__returns_links(self):
 		# Arrange
 		html = "<html><a href='http://www.cnn.com'/></html>"
 
 		# Act
-		links = extract_links(html, "http://www.example.com")
+		result = extract_links(html, "http://www.example.com")
 
 		# Assert
-		assert len(links) == 1, "Expected to find links"
-		assert links["http://www.cnn.com"] == ""
+		self.assertEqual(len(result), 1)
+		self.assertEqual(result["http://www.cnn.com"]["link_text"], "")
+
 
 	def test_extract_links__https_link__returns_links(self):
 		# Arrange
 		html = "<html><a href='https://www.cnn.com'>Click here</a></html>"
 
 		# Act
-		links = extract_links(html, "http://www.example.com")
+		result = extract_links(html, "http://www.example.com")
 
 		# Assert
-		assert len(links) ==  1, "Expected to find links"
-		assert links["https://www.cnn.com"] == "Click here", "Expected to find links"
+		self.assertEqual(len(result), 1)
+		self.assertEqual(result["https://www.cnn.com"]["link_text"], "Click here")
 
 
 	def test_format_url__full_url__no_change(self):

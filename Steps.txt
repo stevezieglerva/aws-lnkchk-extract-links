@@ -1,0 +1,20 @@
+Start S3:
+   Read input
+   Add page to queue 
+   Async Call Extract links
+
+
+   Extract links:
+      Read 20 pages from queue
+      For each message:
+         Read the page 
+         Add sub site pages to the queue
+         Async call Check Page Links (List if urls to check)
+      Async call Extract Links
+
+         Check Page Links:
+         For url in event JSON:
+             Check link
+             Log success
+             Notify failure 
+              
