@@ -3,6 +3,7 @@ import requests
 from urllib.parse import *
 from bs4 import BeautifulSoup
 import json
+from datetime import datetime
 
 
 def lambda_handler(event, context):
@@ -14,33 +15,58 @@ def lambda_handler(event, context):
     queue_url = "https://queue.amazonaws.com/112280397275/lnkchk-pages"
 
     response = sqs.receive_message(QueueUrl=queue_url, MessageAttributeNames=["file", "line"], MaxNumberOfMessages=5)
-    print(json.dumps(response))
-    messages = response["Messages"]
-    for message in messages:
-        file_attribute = ""
-        if message["MessageAttributes"] is not None:
-            file_name = message["MessageAttributes"]["file"]["StringValue"]
-            if file_name:
-                file_attribute = ' ({0})'.format(file_name)
+    print(json.dumps(response, indent=4, sort_keys=False))
+    if "Messages" in response:
+        messages = response["Messages"]
+        print("Found: " + str(len(messages)))
+        for message in messages:
+            file_attribute = ""
+            if message["MessageAttributes"] is not None:
+                file_name = message["MessageAttributes"]["file"]["StringValue"]
+                if file_name:
+                    file_attribute = ' ({0})'.format(file_name)
 
-        url_to_process = message["Body"]
-        print("\tFound queue message:, {0}!{1}".format(url_to_process, file_attribute))
+            url_to_process = message["Body"]
+            print("\tFound queue message:, {0} {1}".format(url_to_process, file_attribute))
 
-        # Read the page
-        html = download_page(url_to_process)
-        links = {}
-        links = extract_links(html, url_to_process)
+            # Read the page
+            html = download_page(url_to_process)
+            links = {}
+            links = extract_links(html, url_to_process)
+            print("Found links:")
+            print(json.dumps(links, indent=4, sort_keys=False))
 
-        # Add relative links to the queue
 
-        # Check the links
-        for key, value in links.items(): 
-            url = key
-            link_text = value
-            if not is_link_valid(url):
-                print("*** Link failed: " + url)
+            # Add relative links to the queue
+            for key, value in links.items():
+                if value["link_location"] == "relative":
+                    print("Adding relative link: ")
+                    print(str(value))
+##                    response = sqs.send_message(QueueUrl=queue_url, DelaySeconds=10, MessageBody=value["url"],  MessageAttributes={
+##                        'file': {
+##                            'DataType': 'String',
+##                            'StringValue': 'Lambda run at ' + str(datetime.now())
+##                        },
+##                        'line': {
+##                            'DataType': 'String',
+##                            'StringValue': 'no line number'
+##                        },
+##                        'source': {
+##                            'DataType': 'String',
+##                            'StringValue': 'Lambda run at ' + str(datetime.now())
+##                        }
+##                        })
 
-        message.delete()
+            # Check the links
+            for key, value in links.items(): 
+                url = key
+                link_text = value
+                if not is_link_valid(url):
+                    print("*** Link failed: " + url)
+
+            receipt_handle = message["ReceiptHandle"]
+            result = sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle )
+            print("Deleted: " + str(result))
 
 
 def download_page(url):
