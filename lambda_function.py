@@ -2,6 +2,7 @@ import boto3
 import requests
 from urllib.parse import *
 from bs4 import BeautifulSoup
+import json
 
 
 def lambda_handler(event, context):
@@ -9,16 +10,20 @@ def lambda_handler(event, context):
 
     sqs = boto3.client('sqs')
 
-    queue = sqs.get_queue_by_name(QueueName="lnkchk-pages")
     # Get messages from the queue
-    for message in queue.receive_messages(MessageAttributeNames=["file", "line"]):
+    queue_url = "https://queue.amazonaws.com/112280397275/lnkchk-pages"
+
+    response = sqs.receive_message(QueueUrl=queue_url, MessageAttributeNames=["file", "line"], MaxNumberOfMessages=5)
+    print(json.dumps(response))
+    messages = response["Messages"]
+    for message in messages:
         file_attribute = ""
-        if message.message_attributes is not None:
-            file_name = message.message_attributes.get("file").get("StringValue")
+        if message["MessageAttributes"] is not None:
+            file_name = message["MessageAttributes"]["file"]["StringValue"]
             if file_name:
                 file_attribute = ' ({0})'.format(file_name)
 
-        url_to_process = message.body
+        url_to_process = message["Body"]
         print("\tFound queue message:, {0}!{1}".format(url_to_process, file_attribute))
 
         # Read the page
