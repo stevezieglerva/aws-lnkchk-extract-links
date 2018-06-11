@@ -177,6 +177,28 @@ class TestMethods(unittest.TestCase):
 		expected = "http://www.example.com/test.html?hello=world"
 		self.assertEqual(result, expected)
 
+	def test_format_url__relative_link_with_base_subpage__relative_added_to_netloc(self):
+		# Arrange
+
+		# Act
+		test_url = "/about.html"
+		result = format_url(test_url, "http://www.example.com/subpage/checkingnow.html")
+
+		# Assert
+		expected = "http://www.example.com/about.html"
+		self.assertEqual(result, expected)
+
+	def test_format_url__relative_link_with_base_subpage_and_https___relative_added_to_netloc(self):
+		# Arrange
+
+		# Act
+		test_url = "/about.html"
+		result = format_url(test_url, "https://www.example.com/subpage/checkingnow.html")
+
+		# Assert
+		expected = "https://www.example.com/about.html"
+		self.assertEqual(result, expected)
+
 	def test_format_url__pure_anchor_link__base_added(self):
 		# Arrange
 

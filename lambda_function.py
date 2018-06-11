@@ -99,13 +99,13 @@ def format_url(url, base_url):
             first_char = path[0]
             if is_anchor_link(path):
                 return ""
+            base_url_parts = urlsplit(base_url)
             seperator = "/"
             if first_char == "/":
                 seperator = ""
-            url = base_url + seperator + url
+            url = base_url_parts.scheme + "://" + base_url_parts.netloc + seperator + url
     elif is_missing_scheme(url):
         url = "http:" + url 
-
     return url
 
 def is_anchor_link(path):
