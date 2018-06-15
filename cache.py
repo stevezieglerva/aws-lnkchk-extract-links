@@ -1,19 +1,23 @@
 import boto3
 import re
+import json
 
 class Cache:
 	def __init__(self, location):
 		self.location = location
 		self.s3 = boto3.resource('s3')
 		self.bucket = self.s3.Bucket(location)
-		
+
+		print("Reading cache")
+		self.db = boto3.resource("dynamodb")
+		cache = self.db.Table("lnkchk-cache")
+		response = cache.scan()
 		self.items = {}
-		objects = self.bucket.objects.all()
-		for obj in objects:
-			key = self.get_key_from_key_filename(obj.key)
-			value = self.get_value_from_key_filename(obj.key)
-			self.items[key] = value
-		print(self.items)
+		for item in response["Items"]:
+			url = item["url"]
+			http_result = item["http_result"]
+			self.items[url] = http_result
+			print(url + ": " + str(http_result))
 
 
 	def add_item(self, key, value):
