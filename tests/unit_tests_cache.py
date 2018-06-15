@@ -30,7 +30,7 @@ class TestMethods(unittest.TestCase):
 		# Arrange
 		self.db = boto3.resource("dynamodb")
 		cache = self.db.Table("lnkchk-cache")
-		cache.put_item(Item = {"url": "http://ziegler.com", "http_result" : 200})
+		cache.put_item(Item = {"url": "http://ziegler.com", "http_result" : "200"})
 		subject = Cache("lnkchk")
 
 		# Act
