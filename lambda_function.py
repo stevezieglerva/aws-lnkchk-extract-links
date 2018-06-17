@@ -8,70 +8,44 @@ from cache import *
 
 
 def lambda_handler(event, context):
-    print("In lambda_handler " + str(datetime.now()))
-    print("Loading cache")
-    cache = Cache()
+    try:
+        print("In lambda_handler " + str(datetime.now()))
+        print("Event:")
+        print(json.dumps(event))
+        cache = Cache()
 
-    sqs = boto3.client('sqs')
+        print("Number of records: " + str(len(event["Records"]) ))
+        count = 0
+        for record in event["Records"]:
+            count = count + 1
+            url_to_process = record["dynamodb"]["Keys"]["url"]["S"]
+            print("Processing record: "+ str(count) + ". for " + url_to_process)
+            
+            if record["eventName"] == "INSERT":
+                # Read the page
+                html = download_page(url_to_process)
+                links = {}
+                links = extract_links(html, url_to_process)
 
-    # Get messages from the queue
-    queue_url = "https://queue.amazonaws.com/112280397275/lnkchk-pages"
+                # Add relative links to the queue
+                for key, value in links.items():
+                    if value["link_location"] == "relative":
+                        try:
+                            print("\tAdding relative link: " + str(value))
+                        except UnicodeEncodeError:
+                            print("\tCan't print unicode chars")
 
-    response = sqs.receive_message(QueueUrl=queue_url, MessageAttributeNames=["All"], MaxNumberOfMessages=10)
-    print(json.dumps(response, indent=4, sort_keys=False))
-    count = 0
-    if "Messages" in response:
-        count = count + 1
-        messages = response["Messages"]
-        print("Found: " + str(len(messages)))
-        for message in messages:
-            file_attribute = ""
-            if message["MessageAttributes"] is not None:
-                file_name = message["MessageAttributes"]["file"]["StringValue"]
-                if file_name:
-                    file_attribute = ' ({0})'.format(file_name)
+                # Check the links
+                for key, value in links.items(): 
+                    url = key
+                    link_text = value
+                    if not is_link_valid(url):
+                        print("*** Link failed: " + url)
+            else:
+                print("\tRecord is not an insert")
+    execpt:
+        print("Exception:", sys.exc_info()[0])
 
-            url_to_process = message["Body"]
-            print("\t" + str(count) + ". Found queue message:, {0} {1}".format(url_to_process, file_attribute))
-
-            # Read the page
-            html = download_page(url_to_process)
-            links = {}
-            links = extract_links(html, url_to_process)
-
-
-            # Add relative links to the queue
-            for key, value in links.items():
-                if value["link_location"] == "relative":
-                    print("Adding relative link: ")
-                    print(str(value))
-##                    response = sqs.send_message(QueueUrl=queue_url, DelaySeconds=10, MessageBody=value["url"],  MessageAttributes={
-##                        'file': {
-##                            'DataType': 'String',
-##                            'StringValue': 'Lambda run at ' + str(datetime.now())
-##                        },
-##                        'line': {
-##                            'DataType': 'String',
-##                            'StringValue': 'no line number'
-##                        },
-##                        'source': {
-##                            'DataType': 'String',
-##                            'StringValue': 'Lambda run at ' + str(datetime.now())
-##                        }
-##                        })
-
-            # Check the links
-            for key, value in links.items(): 
-                url = key
-                link_text = value
-                if not is_link_valid(url):
-                    print("*** Link failed: " + url)
-
-            receipt_handle = message["ReceiptHandle"]
-            result = sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle )
-            print("\tDeleted: " + str(result))
-    else:
-        print("No messages in queue to process.")
 
 
 def download_page(url):
@@ -89,7 +63,7 @@ def extract_links(html, base_url):
         count = count + 1
         url = link.get('href')
         formated_url = format_url(url, base_url)
-        print("\t\t" + str(count) + ". " + url + " -> " + formated_url)
+        print("\t" + str(count) + ". " + url + " -> " + formated_url)
         if formated_url != "":
             link_location = get_link_location(url, base_url)
             links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
