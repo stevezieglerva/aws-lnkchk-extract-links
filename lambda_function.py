@@ -43,7 +43,7 @@ def lambda_handler(event, context):
                         print("*** Link failed: " + url)
             else:
                 print("\tRecord is not an insert")
-    execpt:
+    except:
         print("Exception:", sys.exc_info()[0])
 
 
