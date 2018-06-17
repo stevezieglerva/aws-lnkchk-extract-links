@@ -10,7 +10,7 @@ from cache import *
 def lambda_handler(event, context):
     print("In lambda_handler " + str(datetime.now()))
     print("Loading cache")
-    cache = Cache("lnkchk")
+    cache = Cache()
 
     sqs = boto3.client('sqs')
 

@@ -3,31 +3,26 @@ import re
 import json
 
 class Cache:
-	def __init__(self, location):
+	def __init__(self, location = "lnkchk-cache"):
 		self.location = location
-		self.s3 = boto3.resource('s3')
-		self.bucket = self.s3.Bucket(location)
 
-		print("Reading cache")
+		print("Reading cache from " + self.location)
 		self.db = boto3.resource("dynamodb")
-		cache = self.db.Table("lnkchk-cache")
-		response = cache.scan()
+		self.cache = self.db.Table(self.location)
+		response = self.cache.scan()
 
 		self.items = {}
 		for item in response["Items"]:
 			url = item["url"]
 			http_result = item["http_result"]
 			self.items[url] = http_result
-			print(url + ": " + str(http_result))
-
+			print("\t" + url + ": " + str(http_result))
 
 
 	def add_item(self, key, value):
-		escaped_key = self.escape_key(key)
-		s3_filename = escaped_key + "__value-" + value + ".cachefile"
-		obj = self.bucket.put_object(Key=s3_filename)
-		self.items[escaped_key] = value
-		return obj
+		self.items[key] = value
+		self.cache.put_item(Item = {"url": key, "http_result" : value})
+
 
 	def get_item(self, key):
 		value = ""
@@ -37,3 +32,9 @@ class Cache:
 			print("couldn't find " + key + " in cache")
 		return value 
 
+	def clear(self):
+		for key in self.items.keys():
+			self.cache.delete_item(Key = {"url" : key})
+		self.items.clear()
+		
+ 

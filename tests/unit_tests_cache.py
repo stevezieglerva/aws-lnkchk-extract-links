@@ -8,15 +8,15 @@ class TestMethods(unittest.TestCase):
 		# Arrange
 		
 		# Act
-		subject = Cache("lnkchk")
+		subject = Cache()
 
 		# Assert
-		self.assertEqual(subject.location, "lnkchk")
+		self.assertEqual(subject.location, "lnkchk-cache")
 
 
 	def test_add_item__existing_item__item_returned(self):
 		# Arrange
-		subject = Cache("lnkchk")
+		subject = Cache("lnkchk-cache")
 		subject.add_item("http://nerdthoughts.net/about.html", "200")
 
 		# Act
@@ -31,7 +31,7 @@ class TestMethods(unittest.TestCase):
 		self.db = boto3.resource("dynamodb")
 		cache = self.db.Table("lnkchk-cache")
 		cache.put_item(Item = {"url": "http://ziegler.com", "http_result" : "200"})
-		subject = Cache("lnkchk")
+		subject = Cache("lnkchk-cache")
 
 		# Act
 		result = subject.get_item("http://ziegler.com")
@@ -42,7 +42,7 @@ class TestMethods(unittest.TestCase):
 
 	def test_add_item__complicated_url__item_returned(self):
 		# Arrange
-		subject = Cache("lnkchk")
+		subject = Cache("lnkchk-cache")
 		subject.add_item("http://nerdthoughts.net/about.html?text=388292%20", "400")
 
 		# Act
@@ -52,7 +52,17 @@ class TestMethods(unittest.TestCase):
 		self.assertEqual(result, "400")
 
 
+	def test_clear__cache_with_items__cache_is_empty(self):
+		# Arrange
+		subject = Cache("lnkchk-cache")
+		subject.add_item("http://shouldbe.empty", "500")
 
+		# Act
+		subject.clear()
+		result = subject.get_item("http://shouldbe.empty")
+
+		# Assert
+		self.assertEqual(result, "")
 
 
 
