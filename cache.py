@@ -28,8 +28,6 @@ class Cache:
 		value = ""
 		if key in self.items:
 			value = self.items[key]
-		else:
-			print("couldn't find " + key + " in cache")
 		return value 
 
 	def clear(self):

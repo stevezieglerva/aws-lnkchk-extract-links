@@ -233,6 +233,49 @@ class TestMethods(unittest.TestCase):
 		self.assertEqual(result, expected)
 
 
+	def test_is_link_valid__valid_url__returns_true(self):
+		# Arrange
+		cache = Cache()
+
+		# Act
+		result = is_link_valid("http://google.com", cache)
+
+		# Assert
+		self.assertEqual(result, True)
+
+	def test_is_link_valid__invalid_url__returns_false(self):
+		# Arrange
+		cache = Cache()
+
+		# Act
+		result = is_link_valid("http://nerdthoughts.net/xyz", cache)
+
+		# Assert
+		self.assertEqual(result, False)
+
+	def test_is_link_valid__valid_url_in_cache__returns_true(self):
+		# Arrange
+		cache = Cache()
+		cache.clear()
+		cache.add_item("https://www.google.com", "200")
+
+		# Act
+		result = is_link_valid("https://www.google.com", cache)
+
+		# Assert
+		self.assertEqual(result, True)
+
+	def test_is_link_valid__invalid_url_in_cache__returns_false(self):
+		# Arrange
+		cache = Cache()
+		cache.clear()
+		cache.add_item("http://nerdthoughts.net/xyzincache", "404")
+
+		# Act
+		result = is_link_valid("http://nerdthoughts.net/xyzincache", cache)
+
+		# Assert
+		self.assertEqual(result, False)
 
 
 if __name__ == '__main__':

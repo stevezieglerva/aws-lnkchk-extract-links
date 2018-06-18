@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import json
 from datetime import datetime
 from cache import *
+import sys
 
 
 def lambda_handler(event, context):
@@ -39,12 +40,17 @@ def lambda_handler(event, context):
                 for key, value in links.items(): 
                     url = key
                     link_text = value
-                    if not is_link_valid(url):
+                    # Check if link is in the cache:
+                    cached_result = cache.get_item(url)
+                    if not is_link_valid(url, cache):
                         print("*** Link failed: " + url)
+
             else:
                 print("\tRecord is not an insert")
-    except:
-        print("Exception:", sys.exc_info()[0])
+    except Exception as e:
+        print("Exception:")
+        print(e)
+        raise
 
 
 
@@ -63,10 +69,12 @@ def extract_links(html, base_url):
         count = count + 1
         url = link.get('href')
         formated_url = format_url(url, base_url)
-        print("\t" + str(count) + ". " + url + " -> " + formated_url)
-        if formated_url != "":
-            link_location = get_link_location(url, base_url)
-            links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
+        print(url)
+        if url is not None:
+            print("\t" + str(count) + ". " + url + " -> " + formated_url)
+            if formated_url != "":
+                link_location = get_link_location(url, base_url)
+                links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
     return links
 
 def format_url(url, base_url):
@@ -111,13 +119,24 @@ def get_url_path(url):
     url_parts = urlsplit(url)
     return url_parts.path
 
-def is_link_valid(url):
-    response = requests.head(url)
-    print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
-    if response.status_code < 400:
-        return True
+def is_link_valid(url, cache):
+    cached_result = cache.get_item(url)
+    if cached_result == "":
+        response = requests.head(url)
+        print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
+        cache.add_item(url, response.status_code)
+        if response.status_code < 400:
+            return True
+        else:
+            return False
     else:
-        return False
+        print("\tCache hit: " + url + " = " + cached_result)
+        if int(cached_result) >= 400:
+            return False
+        else:
+            return True
+
+
 
 def get_link_location(url, base_url):
     link_location = "external"

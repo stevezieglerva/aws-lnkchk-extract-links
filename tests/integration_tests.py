@@ -5,10 +5,10 @@ from datetime import datetime
 
 
 class TestMethods(unittest.TestCase):
-	def test_aws_lnkchk_extract_links__file_payload__lambda_called(self):
+	def test_aws_lnkchk_extract_links__file_payload_espn__lambda_called(self):
 		# Arrange
 		payload = ""
-		with open("..\\test_payload.json", "r") as f:
+		with open("..\\test_payload_etsy.json", "r") as f:
 			payload = f.read()
 			f.close()
 		event = json.loads(payload)

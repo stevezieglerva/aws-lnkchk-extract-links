@@ -1,0 +1,47 @@
+
+C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>cls
+
+C:\Users\18589\Dropbox\AWS\aws-lnkchk-extract-links\tests>call ..\Scripts\activate 
+http://www.cnn.com
+	1. http://www.cnn.com -> http://www.cnn.com
+https://www.cnn.com
+	1. https://www.cnn.com -> https://www.cnn.com
+http://www.cnn.com
+	1. http://www.cnn.com -> http://www.cnn.com
+http://www.cnn.com
+	1. http://www.cnn.com -> http://www.cnn.com
+/
+	2. / -> http://www.example.com/
+/subpage/test.html
+	3. /subpage/test.html -> http://www.example.com/subpage/test.html
+http://www.cnn.com
+	1. http://www.cnn.com -> http://www.cnn.com
+http://www.google.com
+	2. http://www.google.com -> http://www.google.com
+Reading cache from lnkchk-cache
+	http://ziegler.com: 200
+couldn't find http://nerdthoughts.net/xyz in cache
+		Checked: http://nerdthoughts.net/xyz - Status: 404
+Reading cache from lnkchk-cache
+	http://ziegler.com: 200
+	Cache hit: http://nerdthoughts.net/xyz
+Reading cache from lnkchk-cache
+	http://nerdthoughts.net/xyz: 404
+couldn't find http://google.com in cache
+		Checked: http://google.com - Status: 301
+Reading cache from lnkchk-cache
+	http://nerdthoughts.net/xyz: 404
+	Cache hit: https://www.google.com
+Reading cache from lnkchk-cache
+	https://www.google.com: 200
+Reading cache from lnkchk-cache
+	https://www.google.com: 200
+	http://nerdthoughts.net/about.html?text=388292%20: 400
+Reading cache from lnkchk-cache
+	https://www.google.com: 200
+	http://nerdthoughts.net/about.html?text=388292%20: 400
+	http://nerdthoughts.net/about.html: 200
+couldn't find http://shouldbe.empty in cache
+Reading cache from lnkchk-cache
+Reading cache from lnkchk-cache
+	http://ziegler.com: 200
