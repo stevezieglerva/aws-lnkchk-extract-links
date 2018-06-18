@@ -1,6 +1,7 @@
 import boto3
 import re
 import json
+from datetime import datetime
 
 class Cache:
 	def __init__(self, location = "lnkchk-cache"):
@@ -21,7 +22,7 @@ class Cache:
 
 	def add_item(self, key, value):
 		self.items[key] = value
-		self.cache.put_item(Item = {"url": key, "http_result" : value})
+		self.cache.put_item(Item = {"url": key, "http_result" : value, "timestamp" : str(datetime.now())})
 
 
 	def get_item(self, key):
