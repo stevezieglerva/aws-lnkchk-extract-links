@@ -14,6 +14,8 @@ def lambda_handler(event, context):
         print("Event:")
         print(json.dumps(event))
         cache = Cache()
+        db = boto3.resource("dynamodb")
+        queue = db.Table("lnkchk-queue")
 
         print("Number of records: " + str(len(event["Records"]) ))
         count = 0
@@ -39,6 +41,7 @@ def lambda_handler(event, context):
             print("\tSource: " + source)
 
             if record["eventName"] == "INSERT":
+                print("\tRecord is INSERT")
                 # Read the page
                 html = download_page(url_to_process)
                 links = {}
@@ -47,20 +50,24 @@ def lambda_handler(event, context):
                 # Add relative links to the queue
                 for key, value in links.items():
                     if value["link_location"] == "relative":
-                        try:
-                            print("\tAdding relative link: " + str(value))
-                        except UnicodeEncodeError:
-                            print("\tCan't print unicode chars")
+                        result = cache.get_item(key)
+                        if result == "":
+                            try:
+                                print("\tAdding relative link: " + str(value))
+                                queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(datetime.now())})
+                            except UnicodeEncodeError:
+                                print("\tCan't print unicode chars")
+                        else:
+                            print("\tRelative link " + key + "already in cache with: '" + result + "'")
 
                 # Check the links
                 for key, value in links.items(): 
                     url = key
                     link_text = value
-                    # Check if link is in the cache:
-                    cached_result = cache.get_item(url)
                     if not is_link_valid(url, cache):
                         print("*** Link failed: " + url)
-
+                print("Removing " + url_to_process + " from the queue")        
+                queue.delete_item(Key = {"url" : url_to_process})
             else:
                 print("\tSkipping because record is: " + record["eventName"])
     except Exception as e:
@@ -74,6 +81,8 @@ def download_page(url):
     html = ""
     response = requests.get(url)
     html = response.text
+    if response.status_code != 200:
+        print("*** Initial lnkchk page " + url + " returned: " + response.status_code)
     return html
 
 def extract_links(html, base_url):
@@ -85,7 +94,6 @@ def extract_links(html, base_url):
         count = count + 1
         url = link.get('href')
         formated_url = format_url(url, base_url)
-        print(url)
         if url is not None:
             print("\t" + str(count) + ". " + url + " -> " + formated_url)
             if formated_url != "":
@@ -146,7 +154,7 @@ def is_link_valid(url, cache):
         else:
             return False
     else:
-        print("\tCache hit: " + url + " = " + cached_result)
+        print("\tCache hit: " + url + " = " + str(cached_result))
         if int(cached_result) >= 400:
             return False
         else:

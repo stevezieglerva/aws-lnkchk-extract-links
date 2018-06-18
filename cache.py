@@ -18,11 +18,9 @@ class Cache:
 			http_result = item["http_result"]
 			self.items[url] = http_result
 
-
 	def add_item(self, key, value):
 		self.items[key] = value
-		self.cache.put_item(Item = {"url": key, "http_result" : value, "timestamp" : str(datetime.now())})
-
+		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(datetime.now())})
 
 	def get_item(self, key):
 		value = ""
