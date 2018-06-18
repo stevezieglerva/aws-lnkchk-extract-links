@@ -20,8 +20,24 @@ def lambda_handler(event, context):
         for record in event["Records"]:
             count = count + 1
             url_to_process = record["dynamodb"]["Keys"]["url"]["S"]
+
+            creation_date_str = ""
+            if "ApproximateCreationDateTime" in record["dynamodb"]:
+                creation_epoch = record["dynamodb"]["ApproximateCreationDateTime"]
+                creation_date = datetime.fromtimestamp(creation_epoch)
+                creation_date_str = str(creation_date)
+            timestamp = ""
+            if "timestamp" in record["dynamodb"]["NewImage"]:
+                timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
+            source = ""
+            if "source" in record["dynamodb"]["NewImage"]:
+                source = record["dynamodb"]["NewImage"]["source"]["S"]
+           
             print("Processing record: "+ str(count) + ". for " + url_to_process)
-            
+            print("\tCreated: " + creation_date_str)
+            print("\tTimestamp: " + timestamp)
+            print("\tSource: " + source)
+
             if record["eventName"] == "INSERT":
                 # Read the page
                 html = download_page(url_to_process)
@@ -46,7 +62,7 @@ def lambda_handler(event, context):
                         print("*** Link failed: " + url)
 
             else:
-                print("\tRecord is not an insert")
+                print("\tSkipping because record is: " + record["eventName"])
     except Exception as e:
         print("Exception:")
         print(e)
@@ -123,7 +139,7 @@ def is_link_valid(url, cache):
     cached_result = cache.get_item(url)
     if cached_result == "":
         response = requests.head(url)
-        print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
+        print("\tChecked: " + url + " - Status: " + str(response.status_code))
         cache.add_item(url, response.status_code)
         if response.status_code < 400:
             return True

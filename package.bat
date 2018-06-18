@@ -1,3 +1,4 @@
+
 set function_name=aws-lnkchk-extract-links
 
 REM Zip the lambda function

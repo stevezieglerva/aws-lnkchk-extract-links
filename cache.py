@@ -17,7 +17,6 @@ class Cache:
 			url = item["url"]
 			http_result = item["http_result"]
 			self.items[url] = http_result
-			print("\t" + url + ": " + str(http_result))
 
 
 	def add_item(self, key, value):

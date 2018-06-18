@@ -10,11 +10,14 @@
 				}
 			},
 			"NewImage": {
-				"Timestampe": {
+				"timestamp": {
 					"S": "2018-06-16"
 				},
 				"url": {
 					"S": "http://www.etsy.com"
+				},
+				"source": {
+					"S": "integration test"
 				}
 			},
 			"StreamViewType": "NEW_AND_OLD_IMAGES",

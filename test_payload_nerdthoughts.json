@@ -4,17 +4,21 @@
 		"eventID": "1",
 		"eventVersion": "1.0",
 		"dynamodb": {
+			"ApproximateCreationDateTime" : 1529248860,
 			"Keys": {
 				"url": {
 					"S": "http://www.nerdthoughts.net"
 				}
 			},
 			"NewImage": {
-				"Timestampe": {
+				"timestamp": {
 					"S": "2018-06-16"
 				},
 				"url": {
 					"S": "http://www.nerdthoughts.net"
+				},
+				"source": {
+					"S": "integration test"
 				}
 			},
 			"StreamViewType": "NEW_AND_OLD_IMAGES",

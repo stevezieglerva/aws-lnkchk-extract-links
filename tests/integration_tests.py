@@ -21,6 +21,17 @@ class TestMethods(unittest.TestCase):
 
 		# Assert
 
+
+	def test_aws_lnkchk_extract_links__only_add_item_to_table__logs_updated(self):
+		# Arrange
+		db = boto3.resource("dynamodb")
+		queue = db.Table("lnkchk-queue")
+		queue.put_item(Item = {"url": "http://nerdthoughts.net", "source" : "integration test only_add_item_to_table", "timestamp" : str(datetime.now())})
+
+		# Act
+
+		# Assert
+
 if __name__ == '__main__':
 	unittest.main()		
 
