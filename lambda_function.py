@@ -29,11 +29,12 @@ def lambda_handler(event, context):
                 creation_date = datetime.fromtimestamp(creation_epoch)
                 creation_date_str = str(creation_date)
             timestamp = ""
-            if "timestamp" in record["dynamodb"]["NewImage"]:
-                timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
             source = ""
-            if "source" in record["dynamodb"]["NewImage"]:
-                source = record["dynamodb"]["NewImage"]["source"]["S"]
+            if "NewImage" in record["dynamodb"]:   
+                if "timestamp" in record["dynamodb"]["NewImage"]:
+                    timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
+                if "source" in record["dynamodb"]["NewImage"]:
+                    source = record["dynamodb"]["NewImage"]["source"]["S"]
            
             print("Processing record: "+ str(count) + ". for " + url_to_process)
             print("\tCreated: " + creation_date_str)
