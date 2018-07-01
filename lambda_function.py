@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import json
 from datetime import datetime
 from cache import *
+from ESLambdaLog import *
 import sys
 
 
@@ -16,6 +17,9 @@ def lambda_handler(event, context):
         cache = Cache()
         db = boto3.resource("dynamodb")
         queue = db.Table("lnkchk-queue")
+
+        ESlog = ESLambdaLog("aws_proc_queue_item")	
+
 
         print("Number of records: " + str(len(event["Records"]) ))
         count = 0
@@ -40,6 +44,9 @@ def lambda_handler(event, context):
             print("\tCreated: " + creation_date_str)
             print("\tTimestamp: " + timestamp)
             print("\tSource: " + source)
+
+            event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : creation_date_str, "source" : source}
+            ESlog.log_event(event)
 
             if record["eventName"] == "INSERT":
                 print("\tRecord is INSERT")
