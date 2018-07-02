@@ -35,7 +35,7 @@ class ESLambdaLog:
 			self.es.indices.create(self.index_name, body=mappings)
 			self.es.index(index=self.index_name, doc_type = "doc", body = log_info)
 
-		self.es.index(index=self.index_name, doc_type = "doc", body = log_info)
+
 
 	def get_timestamp(self):
 		return datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
