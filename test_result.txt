@@ -1,1 +1,1 @@
-null
+{"errorMessage": "Syntax error in module 'lambda_function'"}

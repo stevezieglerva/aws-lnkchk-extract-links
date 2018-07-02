@@ -18,8 +18,8 @@ def lambda_handler(event, context):
         db = boto3.resource("dynamodb")
         queue = db.Table("lnkchk-queue")
 
-        ESlog = ESLambdaLog("aws_proc_queue_item")	
-
+        ESlog = ESLambdaLog("aws_lnkchk_queue")	
+        EScache = ESLambdaLog("aws_lnkchk_cache")	
 
         print("Number of records: " + str(len(event["Records"]) ))
         count = 0
@@ -63,6 +63,9 @@ def lambda_handler(event, context):
                             try:
                                 print("\tAdding relative link: " + str(value))
                                 queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(datetime.now())})
+
+                                event = { "event" : "add_relative_link", "url" : key, "created" : str(datetime.now()), "source" : "lambda execution"}
+                                EScache.log_event(event)  
                             except UnicodeEncodeError:
                                 print("\tCan't print unicode chars")
                         else:

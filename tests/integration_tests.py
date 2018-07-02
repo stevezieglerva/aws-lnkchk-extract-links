@@ -29,11 +29,25 @@ class TestMethods(unittest.TestCase):
 		queue = db.Table("lnkchk-queue")
 		response = queue.scan()
 
-
 		# Act
 		queue.put_item(Item = {"url": "http://lnkchk-simple-site-integration.s3-website-us-east-1.amazonaws.com/", "source" : "integration test only_add_item_to_table", "timestamp" : str(datetime.now())})
 
 		# Assert
+
+
+##	def test_aws_lnkchk_extract_links__only_add_item_to_table_complex__logs_updated(self):
+##		# Arrange
+##		db = boto3.resource("dynamodb")
+##		queue = db.Table("lnkchk-queue")
+##
+##		cache = Cache()
+##		cache.clear()
+##
+##		# Act
+##		queue.put_item(Item = {"url": "http://lnkchk-simple-complex-integration.s3-website-us-east-1.amazonaws.com/", "source" : "integration test only_add_item_to_table", "timestamp" : str(datetime.now())})
+##
+##		# Assert
+
 
 if __name__ == '__main__':
 	unittest.main()		
