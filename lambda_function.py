@@ -87,14 +87,14 @@ def lambda_handler(event, context):
         raise
 
 
-
 def download_page(url):
     html = ""
     response = requests.get(url)
     html = response.text
     if response.status_code != 200:
-        print("*** Initial lnkchk page " + url + " returned: " + response.status_code)
+        print("*** Initial lnkchk page " + url + " returned: " + str(response.status_code))
     return html
+
 
 def extract_links(html, base_url):
     links = {}
