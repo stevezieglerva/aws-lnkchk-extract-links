@@ -113,6 +113,8 @@ def extract_links(html, base_url):
     return links
 
 def format_url(url, base_url):
+    if "mailto:" in url:
+        return ""
     if is_relative_path(url):
         path = get_url_path(url)
         if is_anchor_link(path):
