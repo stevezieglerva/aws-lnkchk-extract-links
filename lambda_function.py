@@ -3,15 +3,17 @@ import requests
 from urllib.parse import *
 from bs4 import BeautifulSoup
 import json
-from datetime import datetime
+import datetime
 from cache import *
 from ESLambdaLog import *
+from LocalTime import *
 import sys
 
 
 def lambda_handler(event, context):
     try:
-        print("In lambda_handler " + str(datetime.now()))
+        local_time = LocalTime()
+        print("In lambda_handler " + str(local_time))
         print("Event:")
         print(json.dumps(event))
         cache = Cache()
@@ -26,11 +28,12 @@ def lambda_handler(event, context):
         for record in event["Records"]:
             count = count + 1
             url_to_process = record["dynamodb"]["Keys"]["url"]["S"]
+            url_to_process = url_to_process.strip()
 
             creation_date_str = ""
             if "ApproximateCreationDateTime" in record["dynamodb"]:
                 creation_epoch = record["dynamodb"]["ApproximateCreationDateTime"]
-                creation_date = datetime.fromtimestamp(creation_epoch)
+                creation_date = datetime.datetime.fromtimestamp(creation_epoch)
                 creation_date_str = str(creation_date)
             timestamp = ""
             source = ""
@@ -45,7 +48,7 @@ def lambda_handler(event, context):
             print("\tTimestamp: " + timestamp)
             print("\tSource: " + source)
 
-            event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : creation_date_str, "source" : source}
+            event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : local_time.now(), "source" : source}
             ESlog.log_event(event)
 
             if record["eventName"] == "INSERT":
@@ -62,9 +65,10 @@ def lambda_handler(event, context):
                         if result == "":
                             try:
                                 print("\tAdding relative link: " + str(value))
-                                queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(datetime.now())})
+                                local_time.now()
+                                queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
 
-                                event = { "event" : "add_relative_link", "url" : key, "created" : str(datetime.now()), "source" : "lambda execution"}
+                                event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
                                 EScache.log_event(event)  
                             except UnicodeEncodeError:
                                 print("\tCan't print unicode chars")
