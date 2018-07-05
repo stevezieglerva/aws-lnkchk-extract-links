@@ -60,11 +60,14 @@ def lambda_handler(event, context):
                 if record["eventName"] == "INSERT":
                     print("\tRecord is INSERT")
                     # Read the page
+                    print("\t\tDownloading page")
                     html = download_page(url_to_process)
+                    print("\t\tExtracting links")
                     links = {}
                     links = extract_links(html, url_to_process)
 
                     # Add relative links to the queue
+                    print("\t\tAdding relative links to the queue for late processing")
                     for key, value in links.items():
                         if value["link_location"] == "relative":
                             result = cache.get_item(key)
@@ -82,6 +85,7 @@ def lambda_handler(event, context):
                                 print("\tRelative link " + key + "already in cache with: '" + result + "'")
 
                     # Check the links
+                    print("\t\tChecking the links")
                     for key, value in links.items(): 
                         url = key
                         link_text = value
@@ -103,6 +107,7 @@ def lambda_handler(event, context):
         print("Exception:")
         print(e)
         raise
+    print("Finished " + local_time.now())
 
 
 def download_page(url):

@@ -20,6 +20,7 @@ class TestMethods(unittest.TestCase):
 		assert " (" in results, "Expected string to have ("
 		assert ")" in results, "Expected string to have )"
 		assert "America/New_York" in results, "Expected string to have America/New_York"
+		assert " UTC)" in results, "Expected string to have UTC)"
 
 	def test_now__NY__format_has_both(self):
 		# Arrange

@@ -26,20 +26,6 @@ class TestMethods(unittest.TestCase):
 		self.assertEqual(result, "200")
 
 
-	def test_get_item__existing_item__item_returned(self):
-		# Arrange
-		self.db = boto3.resource("dynamodb")
-		cache = self.db.Table("lnkchk-cache")
-		cache.put_item(Item = {"url": "http://ziegler.com", "http_result" : "200"})
-		subject = Cache("lnkchk-cache")
-
-		# Act
-		result = subject.get_item("http://ziegler.com")
-
-		# Assert
-		self.assertEqual(result, "200")
-
-
 	def test_add_item__complicated_url__item_returned(self):
 		# Arrange
 		subject = Cache("lnkchk-cache")

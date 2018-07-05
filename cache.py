@@ -10,13 +10,13 @@ class Cache:
 		print("Reading cache from " + self.location)
 		self.db = boto3.resource("dynamodb")
 		self.cache = self.db.Table(self.location)
-		response = self.cache.scan()
-
+##		response = self.cache.scan()
+##
 		self.items = {}
-		for item in response["Items"]:
-			url = item["url"]
-			http_result = item["http_result"]
-			self.items[url] = http_result
+##		for item in response["Items"]:
+##			url = item["url"]
+##			http_result = item["http_result"]
+##			self.items[url] = http_result
 
 	def add_item(self, key, value):
 		self.items[key] = value

@@ -9,7 +9,7 @@ class LocalTime:
 		self.local = self.utc.astimezone(pytz.timezone(self.local_timezone))
 
 	def __str__(self):
-		formatted = str(self.utc) + " (" + str(self.local) + " " + self.local_timezone + ")"
+		formatted = str(self.local) + " " + self.local_timezone + " (" + str(self.utc) + " UTC)"
 		return formatted
 		
 
