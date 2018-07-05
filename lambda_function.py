@@ -13,12 +13,13 @@ import sys
 def lambda_handler(event, context):
     try:
         local_time = LocalTime()
-        print("In lambda_handler " + str(local_time))
+        print("Starting " + str(local_time))
         print("Event:")
         print(json.dumps(event))
         cache = Cache()
         db = boto3.resource("dynamodb")
         queue = db.Table("lnkchk-queue")
+        results = db.Table("lnkchk-results")
 
         ESlog = ESLambdaLog("aws_lnkchk_queue")	
         EScache = ESLambdaLog("aws_lnkchk_cache")	
@@ -26,65 +27,78 @@ def lambda_handler(event, context):
         print("Number of records: " + str(len(event["Records"]) ))
         count = 0
         for record in event["Records"]:
-            count = count + 1
-            url_to_process = record["dynamodb"]["Keys"]["url"]["S"]
-            url_to_process = url_to_process.strip()
+            try:
+                count = count + 1
+                url_to_process = record["dynamodb"]["Keys"]["url"]["S"]
+                url_to_process = url_to_process.strip()
 
-            creation_date_str = ""
-            if "ApproximateCreationDateTime" in record["dynamodb"]:
-                creation_epoch = record["dynamodb"]["ApproximateCreationDateTime"]
-                creation_date = datetime.datetime.fromtimestamp(creation_epoch)
-                creation_date_str = str(creation_date)
-            timestamp = ""
-            source = ""
-            if "NewImage" in record["dynamodb"]:   
-                if "timestamp" in record["dynamodb"]["NewImage"]:
-                    timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
-                if "source" in record["dynamodb"]["NewImage"]:
-                    source = record["dynamodb"]["NewImage"]["source"]["S"]
-           
-            print("Processing record: "+ str(count) + ". for " + url_to_process)
-            print("\tCreated: " + creation_date_str)
-            print("\tTimestamp: " + timestamp)
-            print("\tSource: " + source)
+                creation_date_str = ""
+                if "ApproximateCreationDateTime" in record["dynamodb"]:
+                    creation_epoch = record["dynamodb"]["ApproximateCreationDateTime"]
+                    creation_date = datetime.datetime.fromtimestamp(creation_epoch)
+                    creation_date_str = str(creation_date)
+                timestamp = ""
+                source = ""
+                if "NewImage" in record["dynamodb"]:   
+                    if "timestamp" in record["dynamodb"]["NewImage"]:
+                        timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
+                    if "source" in record["dynamodb"]["NewImage"]:
+                        source = record["dynamodb"]["NewImage"]["source"]["S"]
+            
+                print("Processing record: "+ str(count) + ". for " + url_to_process + " " + local_time.now())
+                print("\tCreated: " + creation_date_str)
+                print("\tTimestamp: " + timestamp)
+                print("\tSource: " + source)
 
-            event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : local_time.now(), "source" : source}
-            ESlog.log_event(event)
+                if "\r" in url_to_process:
+                    print("Skipping leftover nerdthoughts with carriage return")
+                    continue
 
-            if record["eventName"] == "INSERT":
-                print("\tRecord is INSERT")
-                # Read the page
-                html = download_page(url_to_process)
-                links = {}
-                links = extract_links(html, url_to_process)
+                event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : local_time.now(), "source" : source}
+                ESlog.log_event(event)
 
-                # Add relative links to the queue
-                for key, value in links.items():
-                    if value["link_location"] == "relative":
-                        result = cache.get_item(key)
-                        if result == "":
-                            try:
-                                print("\tAdding relative link: " + str(value))
-                                local_time.now()
-                                queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
+                if record["eventName"] == "INSERT":
+                    print("\tRecord is INSERT")
+                    # Read the page
+                    html = download_page(url_to_process)
+                    links = {}
+                    links = extract_links(html, url_to_process)
 
-                                event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
-                                EScache.log_event(event)  
-                            except UnicodeEncodeError:
-                                print("\tCan't print unicode chars")
-                        else:
-                            print("\tRelative link " + key + "already in cache with: '" + result + "'")
+                    # Add relative links to the queue
+                    for key, value in links.items():
+                        if value["link_location"] == "relative":
+                            result = cache.get_item(key)
+                            if result == "":
+                                try:
+                                    print("\tAdding relative link: " + str(value))
+                                    local_time.now()
+                                    queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
 
-                # Check the links
-                for key, value in links.items(): 
-                    url = key
-                    link_text = value
-                    if not is_link_valid(url, cache):
-                        print("*** Link failed: " + url)
-                print("Removing " + url_to_process + " from the queue")        
-                queue.delete_item(Key = {"url" : url_to_process})
-            else:
-                print("\tSkipping because record is: " + record["eventName"])
+                                    event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
+                                    EScache.log_event(event)  
+                                except UnicodeEncodeError:
+                                    print("\tCan't print unicode chars")
+                            else:
+                                print("\tRelative link " + key + "already in cache with: '" + result + "'")
+
+                    # Check the links
+                    for key, value in links.items(): 
+                        url = key
+                        link_text = value
+                        if not is_link_valid(url, cache):
+                            print("*** Link failed: " + url)
+                            local_time.now()
+                            broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : value["link_text"], "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
+                            results.put_item(Item = broken_link)
+                    print("Removing " + url_to_process + " from the queue")        
+                    queue.delete_item(Key = {"url" : url_to_process})
+                else:
+                    print("\tSkipping because record is: " + record["eventName"])
+            except Exception as e:
+                print("ERROR Exception:")
+                print(e)  
+                print("Skipping and removing " + url_to_process + " from the queue")        
+                queue.delete_item(Key = {"url" : url_to_process})              
     except Exception as e:
         print("Exception:")
         print(e)
