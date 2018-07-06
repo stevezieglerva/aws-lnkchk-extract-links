@@ -10,9 +10,10 @@ class Cache:
 		print("Reading cache from " + self.location)
 		self.db = boto3.resource("dynamodb")
 		self.cache = self.db.Table(self.location)
-##		response = self.cache.scan()
-##
 		self.items = {}
+
+## 		Too slow for 1,000s of items. Populate on get_item instead
+##		response = self.cache.scan()
 ##		for item in response["Items"]:
 ##			url = item["url"]
 ##			http_result = item["http_result"]
@@ -26,6 +27,11 @@ class Cache:
 		value = ""
 		if key in self.items:
 			value = self.items[key]
+		else:
+			item = self.cache.get_item(Key={"url" : key})	
+			if "http_result" in item:
+				value = item["http_result"]
+				self.items[key] = item["http_result"]
 		return value 
 
 	def clear(self):

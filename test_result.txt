@@ -1,1 +1,1 @@
-null
+{"pages_processed": 1, "links_checked": 2}

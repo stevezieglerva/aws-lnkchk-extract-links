@@ -7,7 +7,10 @@ import datetime
 from cache import *
 from ESLambdaLog import *
 from LocalTime import *
+from LinkCheckResult import *
 import sys
+import os
+
 
 
 def lambda_handler(event, context):
@@ -16,6 +19,14 @@ def lambda_handler(event, context):
         print("Starting " + str(local_time))
         print("Event:")
         print(json.dumps(event))
+
+        short_circuit_pattern = ""
+        if "url_short_circuit_pattern" in os.environ:
+            short_circuit_pattern = os.environ["url_short_circuit_pattern"]
+            print("Short circuit pattern: " + short_circuit_pattern)
+
+        link_check_result = LinkCheckResult()
+
         cache = Cache()
         db = boto3.resource("dynamodb")
         queue = db.Table("lnkchk-queue")
@@ -56,45 +67,51 @@ def lambda_handler(event, context):
 
                 event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : local_time.now(), "source" : source}
                 ESlog.log_event(event)
+                if continue_to_process_link(short_circuit_pattern, url_to_process):
+                    if record["eventName"] == "INSERT":
+                        print("\tRecord is INSERT")
+                        link_check_result.pages_processed = link_check_result.pages_processed + 1
 
-                if record["eventName"] == "INSERT":
-                    print("\tRecord is INSERT")
-                    # Read the page
-                    print("\t\tDownloading page")
-                    html = download_page(url_to_process)
-                    print("\t\tExtracting links")
-                    links = {}
-                    links = extract_links(html, url_to_process)
+                        # Read the page
+                        print("\t\tDownloading page")
+                        html = download_page(url_to_process)
+                        print("\t\tExtracting links")
+                        links = {}
+                        links = extract_links(html, url_to_process)
 
-                    # Add relative links to the queue
-                    print("\t\tAdding relative links to the queue for late processing")
-                    for key, value in links.items():
-                        if value["link_location"] == "relative":
-                            result = cache.get_item(key)
-                            if result == "":
-                                try:
-                                    print("\tAdding relative link: " + str(value))
-                                    local_time.now()
-                                    queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
+                        # Add relative links to the queue
+                        print("\t\tAdding relative links to the queue for later processing")
+                        for key, value in links.items():
+                            if value["link_location"] == "relative":
+                                result = cache.get_item(key)
+                                if result == "":
+                                    try:
+                                        if is_url_an_html_page(key):
+                                            print("\tAdding relative link: " + str(value))
+                                            local_time.now()
+                                            queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
 
-                                    event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
-                                    EScache.log_event(event)  
-                                except UnicodeEncodeError:
-                                    print("\tCan't print unicode chars")
-                            else:
-                                print("\tRelative link " + key + "already in cache with: '" + result + "'")
+                                            event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
+                                            EScache.log_event(event)  
+                                    except UnicodeEncodeError:
+                                        print("\tCan't print unicode chars")
+                                else:
+                                    print("\tRelative link " + key + "already in cache with: '" + result + "'")
 
-                    # Check the links
-                    print("\t\tChecking the links")
-                    for key, value in links.items(): 
-                        url = key
-                        link_text = value
-                        if not is_link_valid(url, cache):
-                            print("*** Link failed: " + url)
-                            local_time.now()
-                            broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : value["link_text"], "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
-                            results.put_item(Item = broken_link)
-                    print("Removing " + url_to_process + " from the queue")        
+                        # Check the links
+                        print("\t\tChecking the links")
+                        for key, value in links.items(): 
+                            url = key
+                            link_text = value
+                            if not is_link_valid(url, cache):
+                                print("*** Link failed: " + url)
+                                local_time.now()
+                                broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : value["link_text"], "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
+                                results.put_item(Item = broken_link)
+                            link_check_result.links_checked = link_check_result.links_checked + 1
+                        print("Removing " + url_to_process + " from the queue")
+                    else:
+                        print("Skipping due to short circuit url: " + url_to_process)        
                     queue.delete_item(Key = {"url" : url_to_process})
                 else:
                     print("\tSkipping because record is: " + record["eventName"])
@@ -108,16 +125,41 @@ def lambda_handler(event, context):
         print(e)
         raise
     print("Finished " + local_time.now())
+    lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
+    return lambda_results
 
+
+def continue_to_process_link(short_circuit_pattern, url):
+    return not need_to_short_circuit_url(short_circuit_pattern, url) 
+
+
+def need_to_short_circuit_url(short_circuit_pattern, url):
+    short_circuit = False
+    if short_circuit_pattern != "":
+        p = re.compile(short_circuit_pattern)
+        m = p.match(url)
+        if m:
+            short_circuit = True
+    return short_circuit
 
 def download_page(url):
     html = ""
-    response = requests.get(url)
-    html = response.text
-    if response.status_code != 200:
-        print("*** Initial lnkchk page " + url + " returned: " + str(response.status_code))
-    return html
+    if is_url_an_html_page(url):
+        response = requests.get(url)
+        html = response.text
+        if response.status_code != 200:
+            print("*** Initial lnkchk page " + url + " returned: " + str(response.status_code))
+        return html
+    else:
+        print("*** Page is not HTML Content-Type")
+        return html
 
+def is_url_an_html_page(url):
+    response = requests.head(url, allow_redirects=True)
+    if "Content-Type" in response.headers:
+        if "text/html" in response.headers["Content-Type"]:
+            return True
+    return False
 
 def extract_links(html, base_url):
     links = {}
@@ -184,6 +226,11 @@ def is_link_valid(url, cache):
     if cached_result == "":
         response = requests.head(url)
         print("\tChecked: " + url + " - Status: " + str(response.status_code))
+        # HEAD requests not allowed
+        if response.status_code == 405:
+            print("\t HEAD not allowed so trying GET on: " + url)
+            response = requests.get(url)
+            print("\tChecked: " + url + " - Status: " + str(response.status_code))
         cache.add_item(url, response.status_code)
         if response.status_code < 400:
             return True
