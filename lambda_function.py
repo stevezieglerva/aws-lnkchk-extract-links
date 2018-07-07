@@ -225,12 +225,12 @@ def is_link_valid(url, cache):
     cached_result = cache.get_item(url)
     if cached_result == "":
         response = requests.head(url)
-        print("\tChecked: " + url + " - Status: " + str(response.status_code))
+        print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
         # HEAD requests not allowed
         if response.status_code == 405:
             print("\t HEAD not allowed so trying GET on: " + url)
             response = requests.get(url)
-            print("\tChecked: " + url + " - Status: " + str(response.status_code))
+            print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
         cache.add_item(url, response.status_code)
         if response.status_code < 400:
             return True

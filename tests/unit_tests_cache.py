@@ -50,6 +50,24 @@ class TestMethods(unittest.TestCase):
 		# Assert
 		self.assertEqual(result, "")
 
+	def test_clear__in_table_not_local_cache__item_returned(self):
+		# Arrange
+		db = boto3.resource("dynamodb")
+		table_cache = db.Table("lnkchk-cache")
+
+		item = {
+			"http_result": "404",
+			"timestamp": "2018-07-06 04:47:08.586844",
+			"url": "http://table_only.cache"
+		}
+		table_cache.put_item(Item = item)
+		subject = Cache("lnkchk-cache")
+
+		# Act
+		result = subject.get_item("http://table_only.cache")
+
+		# Assert
+		self.assertEqual(result, "404")
 
 
 

@@ -24,14 +24,19 @@ class Cache:
 		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(datetime.now())})
 
 	def get_item(self, key):
+		print("Cache - getting " + key)
 		value = ""
 		if key in self.items:
+			print("Cache - In local cache")
 			value = self.items[key]
 		else:
 			item = self.cache.get_item(Key={"url" : key})	
-			if "http_result" in item:
-				value = item["http_result"]
-				self.items[key] = item["http_result"]
+			print("Cache - table item:")
+			print(json.dumps(item, indent = True))
+			if "http_result" in item["Item"]:
+				print("Cache - In table cache")
+				value = item["Item"]["http_result"]
+				self.items[key] = value
 		return value 
 
 	def clear(self):
