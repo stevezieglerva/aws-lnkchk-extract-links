@@ -1,7 +1,8 @@
 import boto3
 import re
 import json
-from datetime import datetime
+import datetime
+from LocalTime import *
 
 class Cache:
 	def __init__(self, location = "lnkchk-cache"):
@@ -21,7 +22,9 @@ class Cache:
 
 	def add_item(self, key, value):
 		self.items[key] = value
-		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(datetime.now())})
+		local_time = LocalTime()
+		ttl_seconds = 5
+		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(datetime.datetime.now()), "ttl_epoch": local_time.get_epoch_plus_seconds(ttl_seconds) })
 
 	def get_item(self, key):
 		print("Cache - getting " + key)
@@ -32,11 +35,11 @@ class Cache:
 		else:
 			item = self.cache.get_item(Key={"url" : key})	
 			print("Cache - table item:")
-			print(json.dumps(item, indent = True))
-			if "http_result" in item["Item"]:
-				print("Cache - In table cache")
-				value = item["Item"]["http_result"]
-				self.items[key] = value
+			if "Item" in item:
+				if "http_result" in item["Item"]:
+					print("Cache - In table cache")
+					value = item["Item"]["http_result"]
+					self.items[key] = value
 		return value 
 
 	def clear(self):
@@ -44,4 +47,7 @@ class Cache:
 			self.cache.delete_item(Key = {"url" : key})
 		self.items.clear()
 		
+
+
+
  

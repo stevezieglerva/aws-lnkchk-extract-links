@@ -4,13 +4,13 @@ from urllib.parse import *
 from bs4 import BeautifulSoup
 import json
 import datetime
+import time
 from cache import *
 from ESLambdaLog import *
 from LocalTime import *
 from LinkCheckResult import *
 import sys
 import os
-
 
 
 def lambda_handler(event, context):

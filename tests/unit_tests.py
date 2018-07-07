@@ -1,5 +1,6 @@
 import unittest
 from lambda_function import *
+import time
 
 
 class TestMethods(unittest.TestCase):
@@ -334,7 +335,7 @@ class TestMethods(unittest.TestCase):
 		# Act
 		result = need_to_short_circuit_url("", "http://example.com/page1.html")
 
-		# Arrange
+		# Assert
 		self.assertEqual(result, False)
 
 	def test_need_to_short_circuit_url__matching_env_variable__dont_process(self):
@@ -343,7 +344,7 @@ class TestMethods(unittest.TestCase):
 		# Act
 		result = need_to_short_circuit_url(".*example.com.*", "http://example.com/page1.html")
 
-		# Arrange
+		# Assert
 		self.assertEqual(result, True)	
 
 	def test_need_to_short_circuit_url__matching_env_variable_pattern__dont_process(self):
@@ -353,7 +354,7 @@ class TestMethods(unittest.TestCase):
 		result = need_to_short_circuit_url(".*example.com.*|.*hiv.gov.*", "http://example.com/page1.html")
 		result_2 = need_to_short_circuit_url(".*example.com.*|.*hiv.gov.*", "http://hiv.gov/page1.html")
 
-		# Arrange
+		# Assert
 		self.assertEqual(result, True)				
 		self.assertEqual(result_2, True)
 
@@ -364,8 +365,10 @@ class TestMethods(unittest.TestCase):
 		# Act
 		result = need_to_short_circuit_url(".*example.com.*|.*hiv.gov.*", "http://process.com/page1.html")
 
-		# Arrange
+		# Assert
 		self.assertEqual(result, False)				
+
+
 
 
 if __name__ == '__main__':
