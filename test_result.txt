@@ -1,1 +1,1 @@
-{"pages_processed": 1, "links_checked": 2}
+{"pages_processed": 0, "links_checked": 0}

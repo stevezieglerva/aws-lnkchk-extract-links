@@ -11,6 +11,7 @@ from LocalTime import *
 from LinkCheckResult import *
 import sys
 import os
+import traceback
 
 
 def lambda_handler(event, context):
@@ -25,15 +26,17 @@ def lambda_handler(event, context):
             short_circuit_pattern = os.environ["url_short_circuit_pattern"]
             print("Short circuit pattern: " + short_circuit_pattern)
 
+        include_url_pattern = ""
+        if "include_url_pattern" in os.environ:
+            include_url_pattern = os.environ["include_url_pattern"]
+            print("include_url_pattern: " + include_url_pattern)
+
         link_check_result = LinkCheckResult()
 
         cache = Cache()
         db = boto3.resource("dynamodb")
         queue = db.Table("lnkchk-queue")
         results = db.Table("lnkchk-results")
-
-        ESlog = ESLambdaLog("aws_lnkchk_queue")	
-        EScache = ESLambdaLog("aws_lnkchk_cache")	
 
         print("Number of records: " + str(len(event["Records"]) ))
         count = 0
@@ -69,9 +72,7 @@ def lambda_handler(event, context):
                     print("Skipping leftover nerdthoughts with carriage return")
                     continue
 
-                event = { "event" : "process_lambda_queue", "url" : url_to_process, "created" : local_time.now(), "source" : source}
-                ESlog.log_event(event)
-                if continue_to_process_link(short_circuit_pattern, url_to_process):
+                if continue_to_process_link(short_circuit_pattern, include_url_pattern, url_to_process):
                     if record["eventName"] == "INSERT":
                         print("\tRecord is INSERT")
                         link_check_result.pages_processed = link_check_result.pages_processed + 1
@@ -90,13 +91,12 @@ def lambda_handler(event, context):
                                 result = cache.get_item(key)
                                 if result == "":
                                     try:
-                                        if is_url_an_html_page(key):
+                                        if is_url_an_html_page(key) and matches_include_pattern(include_url_pattern, key):
                                             print("\tAdding relative link: " + str(value))
                                             local_time.now()
                                             queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
 
                                             event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
-                                            EScache.log_event(event)  
                                     except UnicodeEncodeError:
                                         print("\tCan't print unicode chars")
                                 else:
@@ -116,13 +116,12 @@ def lambda_handler(event, context):
                         print("Removing " + url_to_process + " from the queue")
                     else:
                         print("Skipping due to short circuit url: " + url_to_process)        
-                    queue.delete_item(Key = {"url" : url_to_process})
                 else:
                     print("\tSkipping because record is: " + record["eventName"])
             except Exception as e:
                 print("ERROR Exception in Records loop: " + str(e))
                 print("Skipping and removing " + url_to_process + " from the because of the exception error")        
-                queue.delete_item(Key = {"url" : url_to_process})              
+            queue.delete_item(Key = {"url" : url_to_process})              
     except Exception as e:
         print("ERROR Exception outside or Records loop:" + str(e))
         raise
@@ -131,9 +130,10 @@ def lambda_handler(event, context):
     return lambda_results
 
 
-def continue_to_process_link(short_circuit_pattern, url):
-    return not need_to_short_circuit_url(short_circuit_pattern, url) 
-
+def continue_to_process_link(short_circuit_pattern, include_url_pattern, url):
+    short_circuit = need_to_short_circuit_url(short_circuit_pattern, url) 
+    matches_include = matches_include_pattern(include_url_pattern, url)
+    return ((not short_circuit) and matches_include)
 
 def need_to_short_circuit_url(short_circuit_pattern, url):
     print("\t\tneed_to_short_circuit_url: " + short_circuit_pattern + ", " + url)
@@ -146,6 +146,17 @@ def need_to_short_circuit_url(short_circuit_pattern, url):
             short_circuit = True
             print("\t\tmatches pattern")
     return short_circuit
+
+def matches_include_pattern(include_url_pattern, url):
+    include = False
+    if include_url_pattern != "":
+        p = re.compile(include_url_pattern)
+        m = p.match(url)
+        if m:
+            include = True
+    else:
+        include = True
+    return include
 
 def download_page(url):
     html = ""
@@ -167,45 +178,56 @@ def is_url_an_html_page(url):
     return False
 
 def extract_links(html, base_url):
-    links = {}
-    soup = BeautifulSoup(html, "html.parser")
-    anchors = soup.find_all('a')
-    count = 0
-    for link in anchors:
-        count = count + 1
-        url = link.get('href')
-        try:
-            formated_url = format_url(url, base_url)
-            if url is not None:
-                print("\t" + str(count) + ". " + url + " -> " + formated_url)
-                if formated_url != "":
-                    link_location = get_link_location(url, base_url)
-                    links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
-        except Exception as e:
-            print("Error while extracting link #" + str(count) + " for: " + url)
-            print("Exception:")
-            print(e)
-            continue
+    try:
+        links = {}
+        soup = BeautifulSoup(html, "html.parser")
+        anchors = soup.find_all('a')
+        count = 0
+
+        for link in anchors:
+            count = count + 1
+            url = link.get('href')
+            if url is None:
+                print("Link has no href")
+                continue
+            try:
+                formated_url = format_url(url, base_url)
+                if url is not None:
+                    print("\t" + str(count) + ". " + url + " -> " + formated_url)
+                    if formated_url != "":
+                        link_location = get_link_location(url, base_url)
+                        links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
+            except Exception as e:
+                print("Exception while extracting link #" + str(count) + " for: " + formated_url )
+                traceback.print_exc()
+                continue
+    except Exception as e:
+        print("Exception in initial extract_links logic :" + str(e))
+        traceback.print_exc()
     return links
 
 def format_url(url, base_url):
-    if "mailto:" in url:
-        return ""
-    if is_relative_path(url):
-        path = get_url_path(url)
-        if is_anchor_link(path):
-            url = ""
-        else:
-            first_char = path[0]
+    try:
+        if "mailto:" in url:
+            return ""
+        if is_relative_path(url):
+            path = get_url_path(url)
             if is_anchor_link(path):
-                return ""
-            base_url_parts = urlsplit(base_url)
-            seperator = "/"
-            if first_char == "/":
-                seperator = ""
-            url = base_url_parts.scheme + "://" + base_url_parts.netloc + seperator + url
-    elif is_missing_scheme(url):
-        url = "http:" + url 
+                url = ""
+            else:
+                first_char = path[0]
+                if is_anchor_link(path):
+                    return ""
+                base_url_parts = urlsplit(base_url)
+                seperator = "/"
+                if first_char == "/":
+                    seperator = ""
+                url = base_url_parts.scheme + "://" + base_url_parts.netloc + seperator + url
+        elif is_missing_scheme(url):
+            url = "http:" + url 
+    except:
+        print("Exception in format_url")
+        traceback.print_exc()
     return url
 
 def is_anchor_link(path):

@@ -382,19 +382,47 @@ class TestMethods(unittest.TestCase):
 		# Arrange
 
 		# Act
-		result = continue_to_process_link("", "https://www.icf.com/blog")
+		result = continue_to_process_link("", "", "https://www.icf.com/blog")
 
 		# Assert
 		self.assertEqual(result, True)	
 
-	def test_continue_to_process_link__icf_blog_short_circuit__process(self):
+	def test_continue_to_process_link__icf_blog_short_circuit__dont_process(self):
 		# Arrange
 
 		# Act
-		result = continue_to_process_link(".*icf.com.*", "https://www.icf.com/blog")
+		result = continue_to_process_link(".*icf.com.*", "", "https://www.icf.com/blog")
 
 		# Assert
 		self.assertEqual(result, False)	
+
+
+	def test_continue_to_process_link__icf_blog_include__process(self):
+		# Arrange
+
+		# Act
+		result = continue_to_process_link("", ".*blog.*", "https://www.icf.com/blog")
+
+		# Assert
+		self.assertEqual(result, True)	
+
+	def test_continue_to_process_link__short_circuit_and_include__process(self):
+		# Arrange
+
+		# Act
+		result = continue_to_process_link(".*hiv.gov.*", ".*icf.com.*", "https://www.icf.com/blog")
+
+		# Assert
+		self.assertEqual(result, True)
+
+	def test_continue_to_process_link__short_circuit_and_include__dont_process(self):
+		# Arrange
+
+		# Act
+		result = continue_to_process_link(".*icf.com.*", ".*hiv.gov.*", "https://www.icf.com/blog")
+
+		# Assert
+		self.assertEqual(result, False)		
 
 if __name__ == '__main__':
 	unittest.main()		
