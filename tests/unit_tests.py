@@ -368,8 +368,33 @@ class TestMethods(unittest.TestCase):
 		# Assert
 		self.assertEqual(result, False)				
 
+	def test_need_to_short_circuit_url__icf_blog__process(self):
+		# Arrange
+
+		# Act
+		result = need_to_short_circuit_url(".*hiv.gov.*", "https://www.icf.com/blog")
+
+		# Assert
+		self.assertEqual(result, False)	
 
 
+	def test_continue_to_process_link__icf_blog__process(self):
+		# Arrange
+
+		# Act
+		result = continue_to_process_link("", "https://www.icf.com/blog")
+
+		# Assert
+		self.assertEqual(result, True)	
+
+	def test_continue_to_process_link__icf_blog_short_circuit__process(self):
+		# Arrange
+
+		# Act
+		result = continue_to_process_link(".*icf.com.*", "https://www.icf.com/blog")
+
+		# Assert
+		self.assertEqual(result, False)	
 
 if __name__ == '__main__':
 	unittest.main()		

@@ -24,7 +24,7 @@ class Cache:
 		self.items[key] = value
 		local_time = LocalTime()
 		ttl_seconds = 5
-		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(datetime.datetime.now()), "ttl_epoch": local_time.get_epoch_plus_seconds(ttl_seconds) })
+		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local), "ttl_epoch": local_time.get_epoch_plus_seconds(ttl_seconds) })
 
 	def get_item(self, key):
 		print("Cache - getting " + key)

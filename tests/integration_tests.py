@@ -143,31 +143,31 @@ class TestMethods(unittest.TestCase):
 		self.assertEqual(result["pages_processed"], 1)
 		self.assertEqual(result["links_checked"], 3)
 
-##	def test_aws_lnkchk_extract_links__nerdthoughts__pages_checked(self):
-##		# Arrange
-##		payload = ""
-##		with open("..\\test_payload_nerdthoughts.json", "r") as f:
-##			payload = f.read()
-##			f.close()
-##		event = json.loads(payload)
-##
-##		db = boto3.resource("dynamodb")
-##		queue = db.Table("lnkchk-queue")
-##		response = queue.scan()
-##		for item in response["Items"]:
-##			url = item["url"]
-##			queue.delete_item(Key = {"url" : url})
-##
-##		cache = Cache()
-##		cache.clear()
-##
-##		# Act
-##		print("Calling lambda_handler ...")
-##		result = lambda_handler(event, "")
-##
-##		# Assert
-##		self.assertEqual(result["pages_processed"], 1)
-##		self.assertEqual(result["links_checked"], 18)
+	def test_aws_lnkchk_extract_links__nerdthoughts__pages_checked(self):
+		# Arrange
+		payload = ""
+		with open("..\\test_payload_nerdthoughts.json", "r") as f:
+			payload = f.read()
+			f.close()
+		event = json.loads(payload)
+
+		db = boto3.resource("dynamodb")
+		queue = db.Table("lnkchk-queue")
+		response = queue.scan()
+		for item in response["Items"]:
+			url = item["url"]
+			queue.delete_item(Key = {"url" : url})
+
+		cache = Cache()
+		cache.clear()
+
+		# Act
+		print("Calling lambda_handler ...")
+		result = lambda_handler(event, "")
+
+		# Assert
+		self.assertEqual(result["pages_processed"], 1)
+		self.assertEqual(result["links_checked"], 18)
 
 
 if __name__ == '__main__':

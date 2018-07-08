@@ -39,6 +39,10 @@ def lambda_handler(event, context):
         count = 0
         for record in event["Records"]:
             try:
+                if  record["eventName"] != "INSERT":
+                    print("Skipping since not a queue INSERT Event")
+                    continue
+
                 count = count + 1
                 url_to_process = record["dynamodb"]["Keys"]["url"]["S"]
                 url_to_process = url_to_process.strip()
@@ -116,13 +120,11 @@ def lambda_handler(event, context):
                 else:
                     print("\tSkipping because record is: " + record["eventName"])
             except Exception as e:
-                print("ERROR Exception:")
-                print(e)  
-                print("Skipping and removing " + url_to_process + " from the queue")        
+                print("ERROR Exception in Records loop: " + str(e))
+                print("Skipping and removing " + url_to_process + " from the because of the exception error")        
                 queue.delete_item(Key = {"url" : url_to_process})              
     except Exception as e:
-        print("Exception:")
-        print(e)
+        print("ERROR Exception outside or Records loop:" + str(e))
         raise
     print("Finished " + local_time.now())
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
@@ -134,12 +136,15 @@ def continue_to_process_link(short_circuit_pattern, url):
 
 
 def need_to_short_circuit_url(short_circuit_pattern, url):
+    print("\t\tneed_to_short_circuit_url: " + short_circuit_pattern + ", " + url)
     short_circuit = False
     if short_circuit_pattern != "":
+        print("\t\tshort_circuit_pattern not empty string")
         p = re.compile(short_circuit_pattern)
         m = p.match(url)
         if m:
             short_circuit = True
+            print("\t\tmatches pattern")
     return short_circuit
 
 def download_page(url):
@@ -169,12 +174,18 @@ def extract_links(html, base_url):
     for link in anchors:
         count = count + 1
         url = link.get('href')
-        formated_url = format_url(url, base_url)
-        if url is not None:
-            print("\t" + str(count) + ". " + url + " -> " + formated_url)
-            if formated_url != "":
-                link_location = get_link_location(url, base_url)
-                links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
+        try:
+            formated_url = format_url(url, base_url)
+            if url is not None:
+                print("\t" + str(count) + ". " + url + " -> " + formated_url)
+                if formated_url != "":
+                    link_location = get_link_location(url, base_url)
+                    links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
+        except Exception as e:
+            print("Error while extracting link #" + str(count) + " for: " + url)
+            print("Exception:")
+            print(e)
+            continue
     return links
 
 def format_url(url, base_url):
