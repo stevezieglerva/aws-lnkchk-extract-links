@@ -19,42 +19,17 @@ import structlog
 def lambda_handler(event, context):
     try:
         local_time = LocalTime()
+        log_level = get_environment_variable("log_level", "WARNING")
 
-        logging.basicConfig(
-            format="%(message)s",
-            stream=sys.stdout,
-            level=logging.WARNING,
-        )
-
-        structlog.configure(
-            processors=[
-                structlog.stdlib.filter_by_level,
-                structlog.stdlib.add_logger_name,
-                structlog.stdlib.add_log_level,
-                structlog.stdlib.PositionalArgumentsFormatter(),
-                structlog.processors.TimeStamper(fmt="iso"),
-                structlog.processors.StackInfoRenderer(),
-                structlog.processors.format_exc_info,
-                structlog.processors.UnicodeDecoder(),
-                structlog.processors.JSONRenderer()
-            ],
-            context_class=dict,
-            logger_factory=structlog.stdlib.LoggerFactory(),
-            wrapper_class=structlog.stdlib.BoundLogger,
-            cache_logger_on_first_use=True,
-        )
+ 
                         
         log = structlog.get_logger()
         log.critical("starting", timestamp_local = str(local_time.local)) 
         log.critical("input_event", input_event=event)
 
-        short_circuit_pattern = ""
-        if "url_short_circuit_pattern" in os.environ:
-            short_circuit_pattern = os.environ["url_short_circuit_pattern"]
-
-        include_url_pattern = ""
-        if "include_url_pattern" in os.environ:
-            include_url_pattern = os.environ["include_url_pattern"]
+        
+        short_circuit_pattern = get_environment_variable("url_short_circuit_pattern", "")
+        include_url_pattern = get_environment_variable("include_url_pattern", "")
 
         log.critical("environment_variables", short_circuit=short_circuit_pattern, include_pattern=include_url_pattern)
         link_check_result = LinkCheckResult()
@@ -89,7 +64,7 @@ def lambda_handler(event, context):
                     if "source" in record["dynamodb"]["NewImage"]:
                         source = record["dynamodb"]["NewImage"]["source"]["S"]
                 log = log.bind(url=url_to_process)
-                og = log.bind(source=source)
+                log = log.bind(source=source)
                 log.critical("processing_record", number=count)
 
                 if "\r" in url_to_process:
@@ -98,18 +73,17 @@ def lambda_handler(event, context):
 
                 if continue_to_process_link(short_circuit_pattern, include_url_pattern, url_to_process):
                     if record["eventName"] == "INSERT":
-                        print("\tRecord is INSERT")
                         link_check_result.pages_processed = link_check_result.pages_processed + 1
 
                         # Read the page
-                        print("\t\tDownloading page")
                         html = download_page(url_to_process)
-                        print("\t\tExtracting links")
+                        log.warning("downloaded_page", page_size=len(html))
                         links = {}
                         links = extract_links(html, url_to_process)
+                        log.warning("extracted_links", link_count=len(links))
 
                         # Add relative links to the queue
-                        print("\t\tAdding relative links to the queue for later processing")
+                        log.warning("adding_relative_links")
                         for key, value in links.items():
                             if value["link_location"] == "relative":
                                 result = cache.get_item(key)
@@ -153,6 +127,39 @@ def lambda_handler(event, context):
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
     return lambda_results
 
+
+def setup_logging():
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=logging.WARNING,
+    )
+
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.processors.JSONRenderer()
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+def get_environment_variable(variable_name, default):
+        variable_value = ""
+        if variable_name in os.environ:
+            variable_value = os.environ[variable_name]
+        else:    
+            variable_value = default
+        return variable_value
 
 def continue_to_process_link(short_circuit_pattern, include_url_pattern, url):
     short_circuit = need_to_short_circuit_url(short_circuit_pattern, url) 
