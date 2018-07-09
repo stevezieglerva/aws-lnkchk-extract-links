@@ -23,7 +23,7 @@ def lambda_handler(event, context):
         logging.basicConfig(
             format="%(message)s",
             stream=sys.stdout,
-            level=logging.INFO,
+            level=logging.WARNING,
         )
 
         structlog.configure(
@@ -45,19 +45,18 @@ def lambda_handler(event, context):
         )
                         
         log = structlog.get_logger()
-        log.critical("Starting", timestamp_local = str(local_time.local)) 
-        log.critical("Input event", input_event=event)
+        log.critical("starting", timestamp_local = str(local_time.local)) 
+        log.critical("input_event", input_event=event)
 
         short_circuit_pattern = ""
         if "url_short_circuit_pattern" in os.environ:
             short_circuit_pattern = os.environ["url_short_circuit_pattern"]
-            print("Short circuit pattern: " + short_circuit_pattern)
 
         include_url_pattern = ""
         if "include_url_pattern" in os.environ:
             include_url_pattern = os.environ["include_url_pattern"]
-            print("include_url_pattern: " + include_url_pattern)
 
+        log.critical("environment_variables", short_circuit=short_circuit_pattern, include_pattern=include_url_pattern)
         link_check_result = LinkCheckResult()
 
         cache = Cache()
@@ -65,7 +64,7 @@ def lambda_handler(event, context):
         queue = db.Table("lnkchk-queue")
         results = db.Table("lnkchk-results")
 
-        log.critical("Number of records: ", num_records=str(len(event["Records"]) ))
+        log.critical("number_of_records", num_records=len(event["Records"]))
         count = 0
         for record in event["Records"]:
             try:
@@ -91,7 +90,7 @@ def lambda_handler(event, context):
                         source = record["dynamodb"]["NewImage"]["source"]["S"]
                 log = log.bind(url=url_to_process)
                 og = log.bind(source=source)
-                log.critical("Processing record: "+ str(count))
+                log.critical("processing_record", number=count)
 
                 if "\r" in url_to_process:
                     print("Skipping leftover nerdthoughts with carriage return")
@@ -150,7 +149,7 @@ def lambda_handler(event, context):
     except Exception as e:
         print("ERROR Exception outside or Records loop:" + str(e))
         raise
-    log.critical("Finished", timestamp_local = str(local_time.local)) 
+    log.critical("finished", timestamp_local = str(local_time.local)) 
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
     return lambda_results
 
@@ -161,15 +160,12 @@ def continue_to_process_link(short_circuit_pattern, include_url_pattern, url):
     return ((not short_circuit) and matches_include)
 
 def need_to_short_circuit_url(short_circuit_pattern, url):
-    print("\t\tneed_to_short_circuit_url: " + short_circuit_pattern + ", " + url)
     short_circuit = False
     if short_circuit_pattern != "":
-        print("\t\tshort_circuit_pattern not empty string")
         p = re.compile(short_circuit_pattern)
         m = p.match(url)
         if m:
             short_circuit = True
-            print("\t\tmatches pattern")
     return short_circuit
 
 def matches_include_pattern(include_url_pattern, url):
