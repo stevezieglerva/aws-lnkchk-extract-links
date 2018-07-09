@@ -20,7 +20,6 @@ class ESLambdaLog:
 
 		indices = self.list_indices()
 		if self.index_name not in indices:
-			log_info = { "event" : "Created " + self.index_name + " index", "@timestamp" : self.get_timestamp()}
 			mappings = {
 					"mappings": {
 						"doc": {
@@ -33,8 +32,6 @@ class ESLambdaLog:
 				}
 			}
 			self.es.indices.create(self.index_name, body=mappings)
-			self.es.index(index=self.index_name, doc_type = "doc", body = log_info)
-
 
 
 	def get_timestamp(self):

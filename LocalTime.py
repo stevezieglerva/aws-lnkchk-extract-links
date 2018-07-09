@@ -25,8 +25,6 @@ class LocalTime:
 	def get_utc_epoch(self):
 		utc_epoch_date = self.get_utc_epoch_date()
 		self.now()
-		print("\n__________utc_epoch_date = " + str(utc_epoch_date))
-		print("\n__________self.utc = " + str(self.utc))
 		return (self.utc - utc_epoch_date).total_seconds()
 
 
@@ -35,5 +33,4 @@ class LocalTime:
 		expiration = local_time.utc + datetime.timedelta(seconds=seconds)
 		utc_epoch_date = self.get_utc_epoch_date()
 		expiration_epoch =  (expiration - utc_epoch_date).total_seconds()
-		print("___________ Expiration: " + str(expiration) + " " + str(expiration_epoch))
 		return  int(expiration_epoch) 	

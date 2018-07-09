@@ -3,12 +3,13 @@ import re
 import json
 import datetime
 from LocalTime import *
+import logging
+import structlog
 
 class Cache:
 	def __init__(self, location = "lnkchk-cache"):
 		self.location = location
 
-		print("Reading cache from " + self.location)
 		self.db = boto3.resource("dynamodb")
 		self.cache = self.db.Table(self.location)
 		self.items = {}
@@ -27,19 +28,21 @@ class Cache:
 		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local), "ttl_epoch": local_time.get_epoch_plus_seconds(ttl_seconds) })
 
 	def get_item(self, key):
-		print("Cache - getting " + key)
+		log = structlog.get_logger()
+		log.info("Cache - getting ", url = key) 
 		value = ""
 		if key in self.items:
-			print("Cache - In local cache")
+			log.info("Cache - in local", url = key) 
 			value = self.items[key]
 		else:
 			item = self.cache.get_item(Key={"url" : key})	
-			print("Cache - table item:")
 			if "Item" in item:
 				if "http_result" in item["Item"]:
-					print("Cache - In table cache")
+					log.info("Cache - In table cache", url = key) 
 					value = item["Item"]["http_result"]
 					self.items[key] = value
+				else:
+					log.info("Cache - Miss",  url = key) 
 		return value 
 
 	def clear(self):

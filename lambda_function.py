@@ -12,14 +12,41 @@ from LinkCheckResult import *
 import sys
 import os
 import traceback
+import logging
+import structlog
 
 
 def lambda_handler(event, context):
     try:
         local_time = LocalTime()
-        print("Starting " + str(local_time))
-        print("Event:")
-        print(json.dumps(event))
+
+        logging.basicConfig(
+            format="%(message)s",
+            stream=sys.stdout,
+            level=logging.INFO,
+        )
+
+        structlog.configure(
+            processors=[
+                structlog.stdlib.filter_by_level,
+                structlog.stdlib.add_logger_name,
+                structlog.stdlib.add_log_level,
+                structlog.stdlib.PositionalArgumentsFormatter(),
+                structlog.processors.TimeStamper(fmt="iso"),
+                structlog.processors.StackInfoRenderer(),
+                structlog.processors.format_exc_info,
+                structlog.processors.UnicodeDecoder(),
+                structlog.processors.JSONRenderer()
+            ],
+            context_class=dict,
+            logger_factory=structlog.stdlib.LoggerFactory(),
+            wrapper_class=structlog.stdlib.BoundLogger,
+            cache_logger_on_first_use=True,
+        )
+                        
+        log = structlog.get_logger()
+        log.critical("Starting", timestamp_local = str(local_time.local)) 
+        log.critical("Input event", input_event=event)
 
         short_circuit_pattern = ""
         if "url_short_circuit_pattern" in os.environ:
@@ -38,12 +65,12 @@ def lambda_handler(event, context):
         queue = db.Table("lnkchk-queue")
         results = db.Table("lnkchk-results")
 
-        print("Number of records: " + str(len(event["Records"]) ))
+        log.critical("Number of records: ", num_records=str(len(event["Records"]) ))
         count = 0
         for record in event["Records"]:
             try:
                 if  record["eventName"] != "INSERT":
-                    print("Skipping since not a queue INSERT Event")
+                    log.warning("Skipping since not a queue INSERT Event")
                     continue
 
                 count = count + 1
@@ -62,11 +89,9 @@ def lambda_handler(event, context):
                         timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
                     if "source" in record["dynamodb"]["NewImage"]:
                         source = record["dynamodb"]["NewImage"]["source"]["S"]
-            
-                print("Processing record: "+ str(count) + ". for " + url_to_process + " " + local_time.now())
-                print("\tCreated: " + creation_date_str)
-                print("\tTimestamp: " + timestamp)
-                print("\tSource: " + source)
+                log = log.bind(url=url_to_process)
+                og = log.bind(source=source)
+                log.critical("Processing record: "+ str(count))
 
                 if "\r" in url_to_process:
                     print("Skipping leftover nerdthoughts with carriage return")
@@ -125,7 +150,7 @@ def lambda_handler(event, context):
     except Exception as e:
         print("ERROR Exception outside or Records loop:" + str(e))
         raise
-    print("Finished " + local_time.now())
+    log.critical("Finished", timestamp_local = str(local_time.local)) 
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
     return lambda_results
 
