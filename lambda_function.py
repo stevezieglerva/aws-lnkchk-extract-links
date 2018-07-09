@@ -21,8 +21,7 @@ def lambda_handler(event, context):
         local_time = LocalTime()
         log_level = get_environment_variable("log_level", "WARNING")
 
- 
-                        
+                       
         log = structlog.get_logger()
         log.critical("starting", timestamp_local = str(local_time.local)) 
         log.critical("input_event", input_event=event)
@@ -68,7 +67,7 @@ def lambda_handler(event, context):
                 log.critical("processing_record", number=count)
 
                 if "\r" in url_to_process:
-                    print("Skipping leftover nerdthoughts with carriage return")
+                    log.warning("skipping", reason="url has carriage return")
                     continue
 
                 if continue_to_process_link(short_circuit_pattern, include_url_pattern, url_to_process):
@@ -113,12 +112,12 @@ def lambda_handler(event, context):
                             link_check_result.links_checked = link_check_result.links_checked + 1
                         print("Removing " + url_to_process + " from the queue")
                     else:
-                        print("Skipping due to short circuit url: " + url_to_process)        
+                        log.warning("skipping", reason="short circuit url")
                 else:
-                    print("\tSkipping because record is: " + record["eventName"])
+                    log.warning("skipping", reason="event is " + record["eventName"])
             except Exception as e:
                 print("ERROR Exception in Records loop: " + str(e))
-                print("Skipping and removing " + url_to_process + " from the because of the exception error")        
+                log.warning("skipping", reason="exception during processing")
             queue.delete_item(Key = {"url" : url_to_process})              
     except Exception as e:
         print("ERROR Exception outside or Records loop:" + str(e))
@@ -207,6 +206,7 @@ def is_url_an_html_page(url):
 
 def extract_links(html, base_url):
     try:
+        log = structlog.get_logger()
         links = {}
         soup = BeautifulSoup(html, "html.parser")
         anchors = soup.find_all('a')
@@ -219,14 +219,16 @@ def extract_links(html, base_url):
                 print("Link has no href")
                 continue
             try:
-                formated_url = format_url(url, base_url)
+                formatted_url = format_url(url, base_url)
                 if url is not None:
-                    print("\t" + str(count) + ". " + url + " -> " + formated_url)
-                    if formated_url != "":
+                    print("\t" + str(count) + ". " + url + " -> " + formatted_url)
+                    log.warning("found_url", num_url=count, url_formatted=formatted_url)
+
+                    if formatted_url != "":
                         link_location = get_link_location(url, base_url)
-                        links[formated_url] = {"url" :  formated_url, "link_text" : link.text, "link_location" : link_location} 
+                        links[formatted_url] = {"url" :  formatted_url, "link_text" : link.text, "link_location" : link_location} 
             except Exception as e:
-                print("Exception while extracting link #" + str(count) + " for: " + formated_url )
+                print("Exception while extracting link #" + str(count) + " for: " + formatted_url )
                 traceback.print_exc()
                 continue
     except Exception as e:
