@@ -391,7 +391,7 @@ class TestMethods(unittest.TestCase):
 		# Arrange
 
 		# Act
-		result = continue_to_process_link(".*icf.com.*", "", "https://www.icf.com/blog")
+		result = continue_to_process_link("icf.com.*", "", "https://www.icf.com/blog")
 
 		# Assert
 		self.assertEqual(result, False)	
@@ -401,7 +401,7 @@ class TestMethods(unittest.TestCase):
 		# Arrange
 
 		# Act
-		result = continue_to_process_link("", ".*blog.*", "https://www.icf.com/blog")
+		result = continue_to_process_link("", ".*blog", "https://www.icf.com/blog")
 
 		# Assert
 		self.assertEqual(result, True)	
@@ -410,7 +410,7 @@ class TestMethods(unittest.TestCase):
 		# Arrange
 
 		# Act
-		result = continue_to_process_link(".*hiv.gov.*", ".*icf.com.*", "https://www.icf.com/blog")
+		result = continue_to_process_link("hiv.gov.*", ".*icf.com", "https://www.icf.com/blog")
 
 		# Assert
 		self.assertEqual(result, True)

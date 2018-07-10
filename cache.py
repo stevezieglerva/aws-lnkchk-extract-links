@@ -24,7 +24,7 @@ class Cache:
 	def add_item(self, key, value):
 		self.items[key] = value
 		local_time = LocalTime()
-		ttl_seconds = 5
+		ttl_seconds = 60 * 60 * 24
 		self.cache.put_item(Item = {"url": key, "http_result" : str(value), "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local), "ttl_epoch": local_time.get_epoch_plus_seconds(ttl_seconds) })
 
 	def get_item(self, key):

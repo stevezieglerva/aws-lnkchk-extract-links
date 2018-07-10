@@ -20,17 +20,14 @@ def lambda_handler(event, context):
     try:
         local_time = LocalTime()
         log_level = get_environment_variable("log_level", "WARNING")
-
-                       
-        log = structlog.get_logger()
-        log.critical("starting", timestamp_local = str(local_time.local)) 
-        log.critical("input_event", input_event=event)
-
+        log = setup_logging()
+        log.critical("10_starting", timestamp_local = str(local_time.local), version=6) 
+        log.critical("15_input_event", input_event=event)
         
         short_circuit_pattern = get_environment_variable("url_short_circuit_pattern", "")
         include_url_pattern = get_environment_variable("include_url_pattern", "")
 
-        log.critical("environment_variables", short_circuit=short_circuit_pattern, include_pattern=include_url_pattern)
+        log.critical("16_environment_variables", short_circuit=short_circuit_pattern, include_pattern=include_url_pattern)
         link_check_result = LinkCheckResult()
 
         cache = Cache()
@@ -38,12 +35,12 @@ def lambda_handler(event, context):
         queue = db.Table("lnkchk-queue")
         results = db.Table("lnkchk-results")
 
-        log.critical("number_of_records", num_records=len(event["Records"]))
+        log.critical("17_number_of_records", num_records=len(event["Records"]))
         count = 0
         for record in event["Records"]:
             try:
                 if  record["eventName"] != "INSERT":
-                    log.warning("Skipping since not a queue INSERT Event")
+                    log.warning("21_skipping", reason="Not an insert record")
                     continue
 
                 count = count + 1
@@ -62,67 +59,67 @@ def lambda_handler(event, context):
                         timestamp = record["dynamodb"]["NewImage"]["timestamp"]["S"]
                     if "source" in record["dynamodb"]["NewImage"]:
                         source = record["dynamodb"]["NewImage"]["source"]["S"]
-                log = log.bind(url=url_to_process)
+                log = log.bind(main_page_url=url_to_process)
                 log = log.bind(source=source)
-                log.critical("processing_record", number=count)
-
+ 
                 if "\r" in url_to_process:
                     log.warning("skipping", reason="url has carriage return")
                     continue
 
                 if continue_to_process_link(short_circuit_pattern, include_url_pattern, url_to_process):
                     if record["eventName"] == "INSERT":
+                        log.critical("20_processing_record", number=count)
                         link_check_result.pages_processed = link_check_result.pages_processed + 1
 
                         # Read the page
                         html = download_page(url_to_process)
-                        log.warning("downloaded_page", page_size=len(html))
+                        log.warning("30_downloaded_page", page_size=len(html))
                         links = {}
                         links = extract_links(html, url_to_process)
-                        log.warning("extracted_links", link_count=len(links))
+                        log.warning("40_extracted_links", link_count=len(links))
 
                         # Add relative links to the queue
-                        log.warning("adding_relative_links")
                         for key, value in links.items():
                             if value["link_location"] == "relative":
                                 result = cache.get_item(key)
                                 if result == "":
                                     try:
                                         if is_url_an_html_page(key) and matches_include_pattern(include_url_pattern, key):
-                                            print("\tAdding relative link: " + str(value))
+                                            log.warning("50_adding_relative_links", new_link=key)
                                             local_time.now()
                                             queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
-
-                                            event = { "event" : "add_relative_link", "url" : key, "created" : local_time.now(), "source" : "lambda execution"}
                                     except UnicodeEncodeError:
                                         print("\tCan't print unicode chars")
                                 else:
-                                    print("\tRelative link " + key + "already in cache with: '" + result + "'")
+                                    log.warning("55_relative_link_already_in_cache")
 
                         # Check the links
-                        print("\t\tChecking the links")
+                        log.critical("60_checking_the_links")
                         for key, value in links.items(): 
                             url = key
                             link_text = value
                             if not is_link_valid(url, cache):
-                                print("*** Link failed: " + url)
+                                log.warning("65_found_broken_link", broken_link=url)
                                 local_time.now()
                                 broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : value["link_text"], "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
                                 results.put_item(Item = broken_link)
                             link_check_result.links_checked = link_check_result.links_checked + 1
-                        print("Removing " + url_to_process + " from the queue")
+                            log.warning("66_checked_link", checked_link=url)                            
+                        log.info("70_removing_link_from_queue")
                     else:
-                        log.warning("skipping", reason="short circuit url")
+                        log.warning("25_skipping_not_insert")
                 else:
-                    log.warning("skipping", reason="event is " + record["eventName"])
+                    log.warning("26_skipping_short_circuit")
             except Exception as e:
                 print("ERROR Exception in Records loop: " + str(e))
-                log.warning("skipping", reason="exception during processing")
-            queue.delete_item(Key = {"url" : url_to_process})              
+                log.warning("27_skipping_exception", reason="exception during processing")
+            queue.delete_item(Key = {"url" : url_to_process})  
+            log = log.unbind("main_page_url")
+            log = log.unbind("source")            
     except Exception as e:
         print("ERROR Exception outside or Records loop:" + str(e))
         raise
-    log.critical("finished", timestamp_local = str(local_time.local)) 
+    log.critical("80_finished", timestamp_local = str(local_time.local)) 
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
     return lambda_results
 
@@ -131,7 +128,7 @@ def setup_logging():
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
-        level=logging.WARNING,
+        level=logging.INFO,
     )
 
     structlog.configure(
@@ -151,6 +148,8 @@ def setup_logging():
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
+    return structlog.get_logger()
+
 
 def get_environment_variable(variable_name, default):
         variable_value = ""
@@ -168,8 +167,7 @@ def continue_to_process_link(short_circuit_pattern, include_url_pattern, url):
 def need_to_short_circuit_url(short_circuit_pattern, url):
     short_circuit = False
     if short_circuit_pattern != "":
-        p = re.compile(short_circuit_pattern)
-        m = p.match(url)
+        m = re.search(short_circuit_pattern, url)
         if m:
             short_circuit = True
     return short_circuit
@@ -177,8 +175,7 @@ def need_to_short_circuit_url(short_circuit_pattern, url):
 def matches_include_pattern(include_url_pattern, url):
     include = False
     if include_url_pattern != "":
-        p = re.compile(include_url_pattern)
-        m = p.match(url)
+        m = re.search(include_url_pattern, url)
         if m:
             include = True
     else:
@@ -188,7 +185,7 @@ def matches_include_pattern(include_url_pattern, url):
 def download_page(url):
     html = ""
     if is_url_an_html_page(url):
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         html = response.text
         if response.status_code != 200:
             print("*** Initial lnkchk page " + url + " returned: " + str(response.status_code))
@@ -222,8 +219,6 @@ def extract_links(html, base_url):
                 formatted_url = format_url(url, base_url)
                 if url is not None:
                     print("\t" + str(count) + ". " + url + " -> " + formatted_url)
-                    log.warning("found_url", num_url=count, url_formatted=formatted_url)
-
                     if formatted_url != "":
                         link_location = get_link_location(url, base_url)
                         links[formatted_url] = {"url" :  formatted_url, "link_text" : link.text, "link_location" : link_location} 
@@ -287,12 +282,13 @@ def get_url_path(url):
 def is_link_valid(url, cache):
     cached_result = cache.get_item(url)
     if cached_result == "":
-        response = requests.head(url)
-        print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
+        response = requests.head(url, timeout=30)
+        log = structlog.get_logger()
+        log.info("checked_link", url=url, status=response.status_code)
         # HEAD requests not allowed
         if response.status_code == 405:
             print("\t HEAD not allowed so trying GET on: " + url)
-            response = requests.get(url)
+            response = requests.get(url, timeout=30)
             print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
         cache.add_item(url, response.status_code)
         if response.status_code < 400:
