@@ -21,7 +21,7 @@ def lambda_handler(event, context):
         local_time = LocalTime()
         log_level = get_environment_variable("log_level", "WARNING")
         log = setup_logging()
-        log.critical("10_starting", timestamp_local = str(local_time.local), version=6) 
+        log.critical("10_starting", timestamp_local = str(local_time.local), version=8 ) 
         log.critical("15_input_event", input_event=event)
         
         short_circuit_pattern = get_environment_variable("url_short_circuit_pattern", "")
@@ -280,6 +280,7 @@ def get_url_path(url):
     return url_parts.path
 
 def is_link_valid(url, cache):
+    log = structlog.get_logger()
     cached_result = cache.get_item(url)
     if cached_result == "":
         response = requests.head(url, timeout=30)
@@ -292,6 +293,7 @@ def is_link_valid(url, cache):
             print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
         cache.add_item(url, response.status_code)
         if response.status_code < 400:
+            log.warning("65a_broken_link_response", status_code=response.status_code)
             return True
         else:
             return False
