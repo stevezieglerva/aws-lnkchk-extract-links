@@ -21,7 +21,17 @@ def lambda_handler(event, context):
         local_time = LocalTime()
         #log_level = get_environment_variable("log_level", "INFO")
         log = setup_logging()
-        log.critical("10_starting", timestamp_local = str(local_time.local), version= 13 ) 
+        
+        #log = log.bind(context.aws_request_id)
+
+        if not event.get("async"):
+            log.critical("05_starting_sync", timestamp_local = str(local_time.local), version= 14 ) 
+            invoke_self_async(event, context)
+            lambda_results = {"pages_processed" : -1, "links_checked" : -1}
+            return lambda_results
+
+
+        log.critical("10_starting_async", timestamp_local = str(local_time.local), version= 13 ) 
         log.critical("15_input_event", input_event=event)
         
         short_circuit_pattern = get_environment_variable("url_short_circuit_pattern", "")
@@ -122,6 +132,17 @@ def lambda_handler(event, context):
     log.critical("80_finished", timestamp_local = str(local_time.local)) 
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
     return lambda_results
+
+
+def invoke_self_async(event, context):
+    log = structlog.get_logger()
+    event["async"] = True
+    log.warning("06_invoke_self_async", context=context)
+    boto3.client("lambda").invoke(
+        FunctionName="aws-lnkchk-extract-links",
+        InvocationType='Event',
+        Payload=bytes(json.dumps(event), "utf-8")
+        )
 
 
 def setup_logging():
