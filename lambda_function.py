@@ -19,9 +19,9 @@ import structlog
 def lambda_handler(event, context):
     try:
         local_time = LocalTime()
-        log_level = get_environment_variable("log_level", "WARNING")
+        #log_level = get_environment_variable("log_level", "INFO")
         log = setup_logging()
-        log.critical("10_starting", timestamp_local = str(local_time.local), version=8 ) 
+        log.critical("10_starting", timestamp_local = str(local_time.local), version= 13 ) 
         log.critical("15_input_event", input_event=event)
         
         short_circuit_pattern = get_environment_variable("url_short_circuit_pattern", "")
@@ -94,7 +94,7 @@ def lambda_handler(event, context):
                                     log.warning("55_relative_link_already_in_cache")
 
                         # Check the links
-                        log.critical("60_checking_the_links")
+                        log.critical("60_checking_the_links", link_count=len(links))
                         for key, value in links.items(): 
                             url = key
                             link_text = value
@@ -109,7 +109,7 @@ def lambda_handler(event, context):
                     else:
                         log.warning("25_skipping_not_insert")
                 else:
-                    log.warning("26_skipping_short_circuit")
+                    log.warning("26_skipping_short_circuit_or_include")
             except Exception as e:
                 print("ERROR Exception in Records loop: " + str(e))
                 log.warning("27_skipping_exception", reason="exception during processing")
@@ -128,7 +128,7 @@ def setup_logging():
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
-        level=logging.INFO,
+        level=logging.INFO
     )
 
     structlog.configure(
@@ -218,7 +218,7 @@ def extract_links(html, base_url):
             try:
                 formatted_url = format_url(url, base_url)
                 if url is not None:
-                    print("\t" + str(count) + ". " + url + " -> " + formatted_url)
+                    log.info("62_url_formatted", old_url=url, new_url=formatted_url)
                     if formatted_url != "":
                         link_location = get_link_location(url, base_url)
                         links[formatted_url] = {"url" :  formatted_url, "link_text" : link.text, "link_location" : link_location} 
@@ -282,6 +282,7 @@ def get_url_path(url):
 def is_link_valid(url, cache):
     log = structlog.get_logger()
     cached_result = cache.get_item(url)
+    log.warning("61a_is_link_valid", result_cache=cached_result)
     if cached_result == "":
         response = requests.head(url, timeout=30)
         log = structlog.get_logger()
