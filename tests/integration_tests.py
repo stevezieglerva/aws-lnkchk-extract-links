@@ -8,7 +8,7 @@ class TestMethods(unittest.TestCase):
 ##	def test_aws_lnkchk_extract_links__file_payload_espn__lambda_called(self):
 ##		# Arrange
 ##		payload = ""
-##		with open("..\\test_payload_nerdthoughts.json", "r") as f:
+##		with open("test_payload_nerdthoughts.json", "r") as f:
 ##			payload = f.read()
 ##			f.close()
 ##		event = json.loads(payload)
@@ -65,7 +65,7 @@ class TestMethods(unittest.TestCase):
 	def test_aws_lnkchk_extract_links__short_circuit_link__no_pages_checked(self):
 		# Arrange
 		payload = ""
-		with open("..\\test_payload_short_circuit.json", "r") as f:
+		with open("test_payload_short_circuit.json", "r") as f:
 			payload = f.read()
 			f.close()
 		event = json.loads(payload)
@@ -94,7 +94,7 @@ class TestMethods(unittest.TestCase):
 	def test_aws_lnkchk_extract_links__simple_site__pages_checked(self):
 		# Arrange
 		payload = ""
-		with open("..\\test_payload_simple.json", "r") as f:
+		with open("test_payload_simple.json", "r") as f:
 			payload = f.read()
 			f.close()
 		event = json.loads(payload)
@@ -120,7 +120,7 @@ class TestMethods(unittest.TestCase):
 	def test_aws_lnkchk_extract_links__complex_site__pages_checked(self):
 		# Arrange
 		payload = ""
-		with open("..\\test_payload_complex.json", "r") as f:
+		with open("test_payload_complex.json", "r") as f:
 			payload = f.read()
 			f.close()
 		event = json.loads(payload)
@@ -146,7 +146,7 @@ class TestMethods(unittest.TestCase):
 	def test_aws_lnkchk_extract_links__nerdthoughts__pages_checked(self):
 		# Arrange
 		payload = ""
-		with open("..\\test_payload_nerdthoughts.json", "r") as f:
+		with open("test_payload_nerdthoughts.json", "r") as f:
 			payload = f.read()
 			f.close()
 		event = json.loads(payload)
