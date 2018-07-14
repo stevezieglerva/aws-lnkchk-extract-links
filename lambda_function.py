@@ -22,16 +22,17 @@ def lambda_handler(event, context):
         #log_level = get_environment_variable("log_level", "INFO")
         log = setup_logging()
         
-        #log = log.bind(context.aws_request_id)
+        if context != "":
+            log = log.bind(request_id=context.aws_request_id)
 
         if not event.get("async"):
-            log.critical("05_starting_sync", timestamp_local = str(local_time.local), version= 14 ) 
+            log.critical("05_starting_sync", timestamp_local = str(local_time.local), version= 19 ) 
             invoke_self_async(event, context)
             lambda_results = {"pages_processed" : -1, "links_checked" : -1}
             return lambda_results
 
 
-        log.critical("10_starting_async", timestamp_local = str(local_time.local), version= 13 ) 
+        log.critical("10_starting_async", timestamp_local = str(local_time.local)) 
         log.critical("15_input_event", input_event=event)
         
         short_circuit_pattern = get_environment_variable("url_short_circuit_pattern", "")
@@ -82,7 +83,7 @@ def lambda_handler(event, context):
                         link_check_result.pages_processed = link_check_result.pages_processed + 1
 
                         # Read the page
-                        html = download_page(url_to_process)
+                        html = download_page(url_to_process, cache)
                         log.warning("30_downloaded_page", page_size=len(html))
                         links = {}
                         links = extract_links(html, url_to_process)
@@ -121,15 +122,15 @@ def lambda_handler(event, context):
                 else:
                     log.warning("26_skipping_short_circuit_or_include")
             except Exception as e:
-                print("ERROR Exception in Records loop: " + str(e))
-                log.warning("27_skipping_exception", reason="exception during processing")
+                exception_name = type(e).__name__
+                log.exception("27b_skipping_exception", exception_name=exception_name, reason="exception during processing")
             queue.delete_item(Key = {"url" : url_to_process})  
             log = log.unbind("main_page_url")
             log = log.unbind("source")            
     except Exception as e:
-        print("ERROR Exception outside or Records loop:" + str(e))
+        log.exception("75_breaking_exception", reason="stopping all processing")        
         raise
-    log.critical("80_finished", timestamp_local = str(local_time.local)) 
+    log.critical("80_finished", timestamp_local = str(local_time.local), finished_pages_processed=link_check_result.pages_processed, finished_links_checked=link_check_result.links_checked) 
     lambda_results = {"pages_processed" : link_check_result.pages_processed, "links_checked" : link_check_result.links_checked}
     return lambda_results
 
@@ -203,17 +204,17 @@ def matches_include_pattern(include_url_pattern, url):
         include = True
     return include
 
-def download_page(url):
+def download_page(url, cache):
     html = ""
     if is_url_an_html_page(url):
         response = requests.get(url, timeout=30)
         html = response.text
         if response.status_code != 200:
             print("*** Initial lnkchk page " + url + " returned: " + str(response.status_code))
-        return html
+            cache.add_item(url, response.status_code)
     else:
         print("*** Page is not HTML Content-Type")
-        return html
+    return html
 
 def is_url_an_html_page(url):
     response = requests.head(url, allow_redirects=True)
