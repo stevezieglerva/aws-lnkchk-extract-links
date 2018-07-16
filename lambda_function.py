@@ -105,7 +105,6 @@ def lambda_handler(event, context):
                                     log.warning("55_relative_link_already_in_cache")
 
                         # Check the links
-                        log.critical("60_checking_the_links", link_count=len(links))
                         for key, value in links.items(): 
                             url = key
                             link_text = value
@@ -116,7 +115,6 @@ def lambda_handler(event, context):
                                 results.put_item(Item = broken_link)
                             link_check_result.links_checked = link_check_result.links_checked + 1
                             log.warning("66_checked_link", checked_link=url)                            
-                        log.info("70_removing_link_from_queue")
                     else:
                         log.warning("25_skipping_not_insert")
                 else:
@@ -124,6 +122,7 @@ def lambda_handler(event, context):
             except Exception as e:
                 exception_name = type(e).__name__
                 log.exception("27b_skipping_exception", exception_name=exception_name, reason="exception during processing")
+            log.info("70_removing_link_from_queue")
             queue.delete_item(Key = {"url" : url_to_process})  
             log = log.unbind("main_page_url")
             log = log.unbind("source")            
@@ -235,22 +234,21 @@ def extract_links(html, base_url):
             count = count + 1
             url = link.get('href')
             if url is None:
-                print("Link has no href")
+                # Link has no href and is placeholder for future frontend processing
                 continue
             try:
                 formatted_url = format_url(url, base_url)
                 if url is not None:
-                    log.info("62_url_formatted", old_url=url, new_url=formatted_url)
                     if formatted_url != "":
                         link_location = get_link_location(url, base_url)
                         links[formatted_url] = {"url" :  formatted_url, "link_text" : link.text, "link_location" : link_location} 
             except Exception as e:
-                print("Exception while extracting link #" + str(count) + " for: " + formatted_url )
-                traceback.print_exc()
+                exception_name = type(e).__name__
+                log.exception("62_formatting_url_exception", exception_name=exception_name, formatted_url=formatted_url)
                 continue
     except Exception as e:
-        print("Exception in initial extract_links logic :" + str(e))
-        traceback.print_exc()
+        exception_name = type(e).__name__
+        log.exception("63_basic_extract_url_exception", exception_name=exception_name)
     return links
 
 def format_url(url, base_url):
