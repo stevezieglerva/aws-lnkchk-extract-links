@@ -278,56 +278,6 @@ class TestMethods(unittest.TestCase):
 		# Assert
 		self.assertEqual(result, False)
 
-	def test_is_url_an_html_page__cnn_with_redirect__returns_true(self):
-		# Arrange
-		url = "http://www.cnn.com"
-
-		# Act
-		result = is_url_an_html_page(url)
-
-		# Assert
-		self.assertEqual(result, True)
-
-	def test_is_url_an_html_page__cnn__returns_true(self):
-		# Arrange
-		url = "https://www.cnn.com"
-
-		# Act
-		result = is_url_an_html_page(url)
-
-		# Assert
-		self.assertEqual(result, True)
-
-	def test_is_url_an_html_page__nerdthoughts__returns_true(self):
-		# Arrange
-		url = "http://www.nerdthoughts.com"
-
-		# Act
-		result = is_url_an_html_page(url)
-
-		# Assert
-		self.assertEqual(result, True)
-
-	def test_is_url_an_html_page__ustif_otto_pdf__returns_falsee(self):
-		# Arrange
-		url = "https://ustifweb-stage.icfwebservices.com/documents/10184/10157/Otto's Service Station/2f432321-83eb-458f-abbb-0acb9e8dfe4b"
-
-		# Act
-		result = is_url_an_html_page(url)
-
-		# Assert
-		self.assertEqual(result, False)
-
-	def test_is_url_an_html_page__dog_image__returns_falsee(self):
-		# Arrange
-		url = "https://farm2.static.flickr.com/1193/5133054365_0170d20672.jpg"
-
-		# Act
-		result = is_url_an_html_page(url)
-
-		# Assert
-		self.assertEqual(result, False)
-
 
 	def test_need_to_short_circuit_url__no_env_variable__process(self):
 		# Arrange
