@@ -9,6 +9,8 @@ from cache import *
 from ESLambdaLog import *
 from LocalTime import *
 from LinkCheckResult import *
+from Page import *
+from Link import *
 import sys
 import os
 import traceback
@@ -83,31 +85,36 @@ def lambda_handler(event, context):
                         link_check_result.pages_processed = link_check_result.pages_processed + 1
 
                         # Read the page
-                        html = download_page(url_to_process, cache)
+                        current_page = Page(url_to_process)
+                        html = current_page.html
                         log.warning("30_downloaded_page", page_size=len(html))
                         links = {}
-                        links = extract_links(html, url_to_process)
+                        links = current_page.extracted_links
                         log.warning("40_extracted_links", link_count=len(links))
 
                         # Add relative links to the queue
-                        for key, value in links.items():
-                            if value["link_location"] == "relative":
-                                result = cache.get_item(key)
+                        for link in links:
+                            url = link["url_qualified"]
+                            internal_page = not link["is_link_external"]
+                            if internal_page:
+                                result = cache.get_item(url)
                                 if result == "":
                                     try:
-                                        if is_url_an_html_page(key) and matches_include_pattern(include_url_pattern, key):
-                                            log.warning("50_adding_relative_links", new_link=key)
+                                        if is_url_an_html_page(url) and matches_include_pattern(include_url_pattern, url):
+                                            log.warning("50_adding_relative_links", new_link=url)
                                             local_time.now()
-                                            queue.put_item(Item = {"url": key, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
+                                            queue.put_item(Item = {"url": url, "source" : "lambda execution", "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local)})
                                     except UnicodeEncodeError:
-                                        print("\tCan't print unicode chars")
+                                        log.error("52_exception_adding_relative_links", new_link=url)
                                 else:
                                     log.warning("55_relative_link_already_in_cache")
 
                         # Check the links
-                        for key, value in links.items(): 
-                            url = key
-                            link_text = value
+                        for link in links: 
+                            url = link["url_qualified"]
+                            link_text = link["link_text"]
+
+                            check the link
                             if not is_link_valid(url, cache):
                                 log.warning("65_found_broken_link", broken_link=url)
                                 local_time.now()

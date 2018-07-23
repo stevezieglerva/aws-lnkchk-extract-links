@@ -67,7 +67,7 @@ class Page():
 		try:
 			log = structlog.get_logger()
 			log.info("__extracting_links", base_url=self.url)			
-			links = {}
+			links = []
 			soup = BeautifulSoup(self.html, "html.parser")
 			anchors = soup.find_all('a')
 			count = 0
@@ -92,7 +92,7 @@ class Page():
 								link_location = "relative"
 							#links[formatted_url] = {"url" :  formatted_url, "link_text" : href.text, "link_location" : link_location} 
 							link_json = link.toJSON()
-							links[formatted_url] = link_json
+							links.append(link_json)
 				except Exception as e:
 					exception_name = type(e).__name__
 					log.exception("formatting_url_exception", exception_name=exception_name, formatted_url=formatted_url)
