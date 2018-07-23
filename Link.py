@@ -20,38 +20,6 @@ class Link():
 		self.is_external_link = self.__is_external_link()
 		self.is_link_valid = False
 
-	def check_if_link_is_valid(self):
-		log = structlog.get_logger()
-		url = self.url_qualified
-		response_status_code = 0
-		try:
-			response = requests.head(url, timeout=5)
-			log.info("checked_link_head", url=url, status=response.status_code)
-			response_status_code = response.status_code
-			# if HEAD requests not allowed
-			if response_status_code == 405:
-				response = requests.get(url, timeout=30)
-				log.info("checked_link_get", url=url, status=response_status_code)
-
-			if response.status_code < 400:
-				log.warning("link_is_valid", url=url, status_code=response.status_code)
-				self.is_link_valid = True
-				return True
-			else:
-				log.warning("link_is_broken", url=url, status_code=response.status_code)
-				self.is_link_valid = False
-				return False
-				
-		except requests.exceptions.ConnectionError as e:
-			log.error("bad_domain_exception_in_link_checking", type=e.__class__.__name__)
-			traceback.print_exc()
-			return False
-
-		except Exception as e:
-			log.error("unknown_exception_in_link_checking", url=url, type=e.__class__.__name__)
-			traceback.print_exc()	
-			raise
-					
 	def toJSON(self):
 		page_json = {}
 		page_json["link_text"] = self.link_text
@@ -68,7 +36,40 @@ class Link():
 
 	def __str__(self):
 		page_json = self.toJSON()
-		return json.dumps(page_json, sort_keys=True)		
+		return json.dumps(page_json, sort_keys=True)
+
+	def check_if_link_is_valid(self):
+		log = structlog.get_logger()
+		url = self.url_qualified
+		response_status_code = 0
+		try:
+			response = requests.head(url, timeout=5)
+			log.info("checked_link_head", url=url, status=response.status_code)
+			response_status_code = response.status_code
+			# if HEAD requests not allowed
+			if response_status_code == 405:
+				response = requests.get(url, timeout=30)
+				log.info("checked_link_get", url=url, status=response_status_code)
+				response_status_code = response.status_code
+			if response_status_code < 400:
+				log.warning("link_is_valid", url=url, status_code=response.status_code)
+				self.is_link_valid = True
+			else:
+				log.warning("link_is_broken", url=url, status_code=response.status_code)
+				self.is_link_valid = False
+			self.response_code = response_status_code
+			return self.is_link_valid		
+		except requests.exceptions.ConnectionError as e:
+			log.error("bad_domain_exception_in_link_checking", type=e.__class__.__name__)
+			traceback.print_exc()
+			self.response_code = -1
+			return self.is_link_valid
+		except Exception as e:
+			log.error("unknown_exception_in_link_checking", url=url, type=e.__class__.__name__)
+			traceback.print_exc()	
+			raise
+					
+		
 
 	def __is_anchor_link(self, path):
 		if path == "":

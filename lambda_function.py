@@ -86,6 +86,8 @@ def lambda_handler(event, context):
 
                         # Read the page
                         current_page = Page(url_to_process)
+                        print("__________________________________")
+                        print(str(current_page))
                         html = current_page.html
                         log.warning("30_downloaded_page", page_size=len(html))
                         links = {}
@@ -94,8 +96,8 @@ def lambda_handler(event, context):
 
                         # Add relative links to the queue
                         for link in links:
-                            url = link["url_qualified"]
-                            internal_page = not link["is_link_external"]
+                            url = link.url_qualified
+                            internal_page = not link.is_external_link
                             if internal_page:
                                 result = cache.get_item(url)
                                 if result == "":
@@ -111,11 +113,9 @@ def lambda_handler(event, context):
 
                         # Check the links
                         for link in links: 
-                            url = link["url_qualified"]
-                            link_text = link["link_text"]
-
-                            check the link
-                            if not is_link_valid(url, cache):
+                            url = link.url_qualified
+                            link_text = link.link_text
+                            if not is_link_valid(link, cache):
                                 log.warning("65_found_broken_link", broken_link=url)
                                 local_time.now()
                                 broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : value["link_text"], "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
@@ -306,25 +306,13 @@ def get_url_path(url):
     url_parts = urlsplit(url)
     return url_parts.path
 
-def is_link_valid(url, cache):
+def is_link_valid(link, cache):
+    url = link.url_qualified
     log = structlog.get_logger()
     cached_result = cache.get_item(url)
     log.warning("61a_is_link_valid", result_cache=cached_result)
     if cached_result == "":
-        response = requests.head(url, timeout=30)
-        log = structlog.get_logger()
-        log.info("checked_link", url=url, status=response.status_code)
-        # HEAD requests not allowed
-        if response.status_code == 405:
-            print("\t HEAD not allowed so trying GET on: " + url)
-            response = requests.get(url, timeout=30)
-            print("\t\tChecked: " + url + " - Status: " + str(response.status_code))
-        cache.add_item(url, response.status_code)
-        if response.status_code < 400:
-            log.warning("65a_broken_link_response", status_code=response.status_code)
-            return True
-        else:
-            return False
+        link.check_if_link_is_valid()
     else:
         print("\tCache hit: " + url + " = " + str(cached_result))
         if int(cached_result) >= 400:
