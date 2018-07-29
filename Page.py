@@ -27,14 +27,22 @@ class Page():
 			self.extracted_links = self.__extract_links()
 
 	def __str__(self):
+		page_json = self.toJSON()
+		return json.dumps(page_json, sort_keys=True, indent=3)
+
+	def toJSON(self):
 		page_json = {"url" : self.url, "response_code" : self.response_code, "html_page" : self.html_page, "download_sec" : self.download_sec}
 		page_json = {}
 		page_json["url"] = self.url
 		page_json["response_code"] = self.response_code
 		page_json["html_length"] = str(len(self.html)) 
 		page_json["download_sec"] = self.download_sec
-		page_json["extracted_links"] = self.extracted_links
-		return json.dumps(page_json, sort_keys=True)
+
+		links_json = []
+		for link in self.extracted_links:
+			links_json.append(link.toJSON())
+		page_json["extracted_links"] = links_json
+		return page_json
 
 	def download(self):
 		if self.avoid_downloading_slow_non_html_page():
@@ -91,8 +99,10 @@ class Page():
 							else:
 								link_location = "relative"
 							#links[formatted_url] = {"url" :  formatted_url, "link_text" : href.text, "link_location" : link_location} 
-							link_json = link.toJSON()
-							links.append(link_json)
+							#link_json = link.toJSON()
+							#links.append(link_json)
+							links.append(link)
+
 				except Exception as e:
 					exception_name = type(e).__name__
 					log.exception("formatting_url_exception", exception_name=exception_name, formatted_url=formatted_url)

@@ -87,7 +87,7 @@ def lambda_handler(event, context):
                         # Read the page
                         current_page = Page(url_to_process)
                         print("__________________________________")
-                        print(str(current_page))
+                        print(json.dumps(current_page.toJSON(), indent=3))
                         html = current_page.html
                         log.warning("30_downloaded_page", page_size=len(html))
                         links = {}
@@ -115,10 +115,12 @@ def lambda_handler(event, context):
                         for link in links: 
                             url = link.url_qualified
                             link_text = link.link_text
-                            if not is_link_valid(link, cache):
+                            checked_link = is_link_valid(link, cache)
+                            is_broken_link = not checked_link.is_link_valid
+                            if is_broken_link:
                                 log.warning("65_found_broken_link", broken_link=url)
                                 local_time.now()
-                                broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : value["link_text"], "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
+                                broken_link = {"broken_link" : url, "page_url" : url_to_process, "link_text" : link.link_text, "timestamp" : str(local_time.utc), "timestamp_local" : str(local_time.local) }
                                 results.put_item(Item = broken_link)
                             link_check_result.links_checked = link_check_result.links_checked + 1
                             log.warning("66_checked_link", checked_link=url)                            
@@ -310,17 +312,16 @@ def is_link_valid(link, cache):
     url = link.url_qualified
     log = structlog.get_logger()
     cached_result = cache.get_item(url)
-    log.warning("61a_is_link_valid", result_cache=cached_result)
+    link_valid = False
+    found_in_cache = False
     if cached_result == "":
-        link.check_if_link_is_valid()
+        link_valid = link.check_if_link_is_valid()
     else:
-        print("\tCache hit: " + url + " = " + str(cached_result))
-        if int(cached_result) >= 400:
-            return False
-        else:
-            return True
-
-
+        found_in_cache = True
+        if int(cached_result) <= 400:
+            link_valid = True
+    log.info("61_is_link_valid", url=url, link_valid=link_valid, found_in_cache=found_in_cache)
+    return link
 
 def get_link_location(url, base_url):
     link_location = "external"

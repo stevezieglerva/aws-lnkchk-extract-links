@@ -32,6 +32,7 @@ class Link():
 		page_json["url_path"] = self.url_path
 		page_json["is_relative_path"] = str(self.is_relative_path)
 		page_json["is_external_link"] = str(self.is_external_link)
+		page_json["is_link_valid"] = str(self.is_link_valid)
 		return page_json
 
 	def __str__(self):

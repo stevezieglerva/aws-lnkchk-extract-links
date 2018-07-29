@@ -24,17 +24,17 @@ class Cache:
 		log = structlog.get_logger()
 		value = ""
 		if key in self.items:
-			log.warning("63_cache_hit_local", url = key) 
+			log.info("63_cache_hit_local", url = key) 
 			value = self.items[key]
 		else:
 			item = self.cache.get_item(Key={"url" : key})	
 			if "Item" in item:
 				if "http_result" in item["Item"]:
-					log.warning("63_cache_hit_table", url = key) 
+					log.info("63_cache_hit_table", url = key) 
 					value = item["Item"]["http_result"]
 					self.items[key] = value
 				else:
-					log.warning("63_cache_missed", url = key) 
+					log.info("63_cache_missed", url = key) 
 		return value 
 
 	def clear(self):
