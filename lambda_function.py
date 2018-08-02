@@ -86,10 +86,10 @@ def lambda_handler(event, context):
 
                         # Read the page
                         current_page = Page(url_to_process)
-                        print("__________________________________")
                         print(json.dumps(current_page.toJSON(), indent=3))
-                        html = current_page.html
-                        log.warning("30_downloaded_page", page_size=len(html))
+                        log.warning("30_downloaded_page", page_size=len(current_page.html))
+                        cache.add_item(current_page.url, current_page.response_code)
+
                         links = {}
                         links = current_page.extracted_links
                         log.warning("40_extracted_links", link_count=len(links))
@@ -125,6 +125,8 @@ def lambda_handler(event, context):
                             link_check_result.links_checked = link_check_result.links_checked + 1
                             log.warning("66_checked_link", checked_link=url)                            
                     else:
+
+
                         log.warning("25_skipping_not_insert")
                 else:
                     log.warning("26_skipping_short_circuit_or_include")
@@ -152,7 +154,6 @@ def invoke_self_async(event, context):
         InvocationType='Event',
         Payload=bytes(json.dumps(event), "utf-8")
         )
-
 
 def setup_logging():
     logging.basicConfig(
