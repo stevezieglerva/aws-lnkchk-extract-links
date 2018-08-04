@@ -98,9 +98,6 @@ class Page():
 								link_location = "external"
 							else:
 								link_location = "relative"
-							#links[formatted_url] = {"url" :  formatted_url, "link_text" : href.text, "link_location" : link_location} 
-							#link_json = link.toJSON()
-							#links.append(link_json)
 							links.append(link)
 
 				except Exception as e:

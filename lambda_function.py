@@ -213,18 +213,6 @@ def matches_include_pattern(include_url_pattern, url):
         include = True
     return include
 
-def download_page(url, cache):
-    html = ""
-    if is_url_an_html_page(url):
-        response = requests.get(url, timeout=30)
-        html = response.text
-        if response.status_code != 200:
-            print("*** Initial lnkchk page " + url + " returned: " + str(response.status_code))
-            cache.add_item(url, response.status_code)
-    else:
-        print("*** Page is not HTML Content-Type")
-    return html
-
 def is_url_an_html_page(url):
     response = requests.head(url, allow_redirects=True)
     if "Content-Type" in response.headers:
@@ -232,82 +220,6 @@ def is_url_an_html_page(url):
             return True
     return False
 
-def extract_links(html, base_url):
-    try:
-        log = structlog.get_logger()
-        links = {}
-        soup = BeautifulSoup(html, "html.parser")
-        anchors = soup.find_all('a')
-        count = 0
-
-        for link in anchors:
-            count = count + 1
-            url = link.get('href')
-            if url is None:
-                # Link has no href and is placeholder for future frontend processing
-                continue
-            try:
-                formatted_url = format_url(url, base_url)
-                if url is not None:
-                    if formatted_url != "":
-                        link_location = get_link_location(url, base_url)
-                        links[formatted_url] = {"url" :  formatted_url, "link_text" : link.text, "link_location" : link_location} 
-            except Exception as e:
-                exception_name = type(e).__name__
-                log.exception("62_formatting_url_exception", exception_name=exception_name, formatted_url=formatted_url)
-                continue
-    except Exception as e:
-        exception_name = type(e).__name__
-        log.exception("63_basic_extract_url_exception", exception_name=exception_name)
-    return links
-
-def format_url(url, base_url):
-    try:
-        if "mailto:" in url:
-            return ""
-        if is_relative_path(url):
-            path = get_url_path(url)
-            if is_anchor_link(path):
-                url = ""
-            else:
-                first_char = path[0]
-                if is_anchor_link(path):
-                    return ""
-                base_url_parts = urlsplit(base_url)
-                seperator = "/"
-                if first_char == "/":
-                    seperator = ""
-                url = base_url_parts.scheme + "://" + base_url_parts.netloc + seperator + url
-        elif is_missing_scheme(url):
-            url = "http:" + url 
-    except:
-        print("Exception in format_url")
-        traceback.print_exc()
-    return url
-
-def is_anchor_link(path):
-    if path == "":
-        return True
-    else:
-        return False
-
-def is_relative_path(url):
-    url_parts = urlsplit(url)
-    if url_parts.scheme == "" and url_parts.netloc == "": 
-        return True
-    else:
-        return False
-
-def is_missing_scheme(url):
-    url_parts = urlsplit(url)
-    if url_parts.scheme == "" and url_parts.netloc != "": 
-        return True
-    else:
-        return False
-
-def get_url_path(url):
-    url_parts = urlsplit(url)
-    return url_parts.path
 
 def is_link_valid(link, cache):
     url = link.url_qualified
@@ -324,14 +236,4 @@ def is_link_valid(link, cache):
     log.info("61_is_link_valid", url=url, link_valid=link_valid, found_in_cache=found_in_cache)
     return link
 
-def get_link_location(url, base_url):
-    link_location = "external"
-    if is_relative_path(url):
-        link_location = "relative"
 
-    url_parts = urlsplit(url)
-    base_url_parts = urlsplit(base_url)
-    if url_parts.netloc == base_url_parts.netloc:
-        link_location = "relative"    
-
-    return link_location
