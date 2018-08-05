@@ -1,11 +1,25 @@
 import logging
 import structlog
+import os
 
 
-logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(message)s')
+print(os.getenv("LOG_LEVEL", "INFO").upper())
 
-structlog.configure(
-	processors=[
+
+
+if os.getenv("LOG_MODE", "PROD").upper() == 'LOCAL':
+	chain = [
+		structlog.stdlib.add_log_level,
+		structlog.stdlib.add_logger_name,
+		structlog.stdlib.PositionalArgumentsFormatter(),
+		structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f"),
+		structlog.processors.StackInfoRenderer(),
+		structlog.processors.format_exc_info,
+		structlog.dev.ConsoleRenderer()
+	]
+else:
+	chain = [
 		structlog.stdlib.filter_by_level,
 		structlog.stdlib.add_logger_name,
 		structlog.stdlib.add_log_level,
@@ -15,7 +29,11 @@ structlog.configure(
 		structlog.processors.format_exc_info,
 		structlog.processors.UnicodeDecoder(),
 		structlog.processors.JSONRenderer()
-	],
+	]
+
+
+structlog.configure(
+	processors=chain,
 	context_class=dict,
 	logger_factory=structlog.stdlib.LoggerFactory(),
 	wrapper_class=structlog.stdlib.BoundLogger,
@@ -24,6 +42,12 @@ structlog.configure(
 
 
 log = structlog.getLogger()
-log.critical("critical")
-log.warning("warning")
-log.info("info")
+
+
+level_env = os.getenv("LOG_LEVEL", "INFO").upper()
+log_levels = {"CRITICAL" : logging.CRITICAL, "ERROR" : logging.ERROR, "WARNING" : logging.WARNING, "INFO" : logging.INFO, "DEBUG" : logging.DEBUG}
+log.setLevel(log_levels[level_env])
+
+log.critical("critical message")
+log.warning("warning message")
+log.info("info message")

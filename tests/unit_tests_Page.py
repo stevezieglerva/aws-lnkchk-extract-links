@@ -29,8 +29,7 @@ class PageTest(unittest.TestCase):
 			wrapper_class=structlog.stdlib.BoundLogger,
 			cache_logger_on_first_use=True,
 			)
-		
-		
+				
 		log = structlog.getLogger()
 		log.critcal("starting testing")
 
